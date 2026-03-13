@@ -154,8 +154,36 @@ function handleCloseSolution() {
   <div class="app">
     <header>
       <h1>🎮 紙片馬力歐 摺紙國王 戰鬥模擬器</h1>
-      <p>4圈 x 12格 環狀轉盤戰鬥系統</p>
+      <div class="header-info-row">
+        <p>4圈 x 12格 環狀轉盤戰鬥系統</p>
+        <span v-if="!isEditMode" class="move-info">步數: {{ remainingMoves }} / {{ moveLimit }}</span>
+      </div>
     </header>
+<style>
+.header-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2em;
+  margin-bottom: 0.5em;
+}
+.move-info {
+  color: #1976d2;
+  font-weight: bold;
+  font-size: 1.1em;
+  background: #fff;
+  border-radius: 8px;
+  padding: 2px 12px;
+  box-shadow: 0 1px 4px #0001;
+}
+@media (max-width: 600px) {
+  .move-info {
+    font-size: 1em;
+    padding: 2px 8px;
+  }
+}
+</style>
 
     <main>
       <BoardView
