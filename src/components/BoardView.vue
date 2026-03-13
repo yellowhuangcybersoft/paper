@@ -120,6 +120,13 @@
       >
         🍄
       </text>
+        <!-- 右下角剩餘步數（僅操作模式顯示，且有 moveLimit 時） -->
+        <g v-if="!isEditMode && typeof remainingMoves === 'number' && typeof moveLimit === 'number'">
+          <rect :x="size - 90" :y="size - 50" width="80" height="36" rx="12" fill="#fff" fill-opacity="0.85" />
+          <text :x="size - 50" :y="size - 28" text-anchor="middle" font-size="18" fill="#1976d2" font-weight="bold">
+            步數: {{ remainingMoves }} / {{ moveLimit }}
+          </text>
+        </g>
     </svg>
   </div>
 </template>
@@ -156,6 +163,14 @@ const props = defineProps({
   editType: {
     type: String,
     default: 'enemy' // 'enemy' or 'target'
+  },
+  remainingMoves: {
+    type: Number,
+    required: true
+  },
+  moveLimit: {
+    type: Number,
+    required: true
   }
 })
 

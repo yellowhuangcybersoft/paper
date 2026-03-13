@@ -53,77 +53,42 @@
       <h4>操作設定</h4>
       
       <div class="status-bar">
-        <span>剩餘步數: <strong>{{ remainingMoves }}</strong> / {{ moveLimit }}</span>
-        <br />
         <small v-if="currentOperation">
           當前: {{ currentOperation.type === 'rotate' ? '圈' + (currentOperation.index + 1) : getSlideLineLabel(currentOperation.index) }}
         </small>
       </div>
 
       <!-- 操作模式切換 -->
+
       <div class="operation-mode-toggle">
-        <button 
-          :class="['toggle-btn', operationMode === 'rotate' ? 'active' : '']"
-          @click="setOperationMode('rotate')"
-        >
-          🔄 轉圈模式
+        <button :class="['toggle-btn', operationMode === 'rotate' ? 'active' : '']" @click="setOperationMode('rotate')">
+          🔄 旋轉圈
         </button>
-        <button 
-          :class="['toggle-btn', operationMode === 'slide' ? 'active' : '']"
-          @click="setOperationMode('slide')"
-        >
-          ↕️ 滑動模式
+        <button :class="['toggle-btn', operationMode === 'slide' ? 'active' : '']" @click="setOperationMode('slide')">
+          ↔️ 滑動線
         </button>
       </div>
 
-      <!-- 當前選擇顯示 -->
       <div class="selection-info">
         <template v-if="operationMode === 'rotate'">
-          <span v-if="selectedRing !== null">已選擇: <strong>圈{{ selectedRing + 1 }}</strong></span>
-          <span v-else class="hint-text">👆 點擊盤面選擇圈</span>
+          <span v-if="selectedRing !== null">圈{{ selectedRing + 1 }}</span>
+          <span v-else class="hint-text">選圈</span>
         </template>
         <template v-else>
-          <span v-if="selectedSector !== null">
-            已選擇: <strong>{{ getSlideLineLabel(selectedSector) }}</strong>
-          </span>
-          <span v-else class="hint-text">👆 點擊盤面選擇線</span>
+          <span v-if="selectedSector !== null">{{ getSlideLineLabel(selectedSector) }}</span>
+          <span v-else class="hint-text">選線</span>
         </template>
       </div>
 
-      <!-- 旋轉控制 -->
-      <div v-if="operationMode === 'rotate'" class="button-group vertical">
-        <button 
-          @click="rotateLeft" 
-          class="btn btn-action" 
-          :disabled="selectedRing === null"
-        >
-          ↺ 逆時針旋轉 1 格
-        </button>
-        <button 
-          @click="rotateRight" 
-          class="btn btn-action" 
-          :disabled="selectedRing === null"
-        >
-          ↻ 順時針旋轉 1 格
-        </button>
-      </div>
-
-      <!-- 滑動控制 -->
-      <div v-else class="button-group vertical">
-        <button 
-          @click="slideLeft" 
-          class="btn btn-action-green" 
-          :disabled="selectedSector === null"
-        >
-          ⬅️ 向左滑動 1 格
-        </button>
-        <button 
-          @click="slideRight" 
-          class="btn btn-action-green" 
-          :disabled="selectedSector === null"
-        >
-          ➡️ 向右滑動 1 格
-        </button>
+      <div class="button-group">
+        <template v-if="operationMode === 'rotate'">
+          <button @click="rotateLeft" class="btn btn-action" :disabled="selectedRing === null">↺ 左旋轉</button>
+          <button @click="rotateRight" class="btn btn-action" :disabled="selectedRing === null">↻ 右旋轉</button>
+        </template>
+        <template v-else>
+          <button @click="slideLeft" class="btn btn-action-green" :disabled="selectedSector === null">⬅️ 左滑動</button>
+          <button @click="slideRight" class="btn btn-action-green" :disabled="selectedSector === null">➡️ 右滑動</button>
+        </template>
       </div>
 
       <hr />
