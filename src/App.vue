@@ -153,7 +153,7 @@ function handleCloseSolution() {
 <template>
   <div class="app">
     <header>
-      <h1>🎮 紙片馬力歐 摺紙國王 戰鬥模擬器</h1>
+      <h1>🎮 紙片瑪利歐：摺紙國王 戰鬥模擬器</h1>
       <div class="header-info-row">
         <span v-if="!isEditMode" class="move-info">步數: {{ remainingMoves }} / {{ moveLimit }}</span>
       </div>
