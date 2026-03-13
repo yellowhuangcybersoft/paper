@@ -36,15 +36,16 @@
         </button>
       </div>
       
-      <div class="form-row">
-        <label>可操作次數:</label>
-        <input type="number" v-model.number="moveLimit" min="1" max="10" />
+      <div class="form-row slider-row">
+        <label>步數:</label>
+        <input type="range" v-model.number="moveLimit" min="2" max="4" class="slider" />
+        <span class="slider-value">{{ moveLimit }}</span>
       </div>
       <div class="button-group">
-        <button @click="saveInitial" class="btn btn-primary">💾 儲存初始盤面</button>
-        <button @click="clearBoard" class="btn btn-danger">🗑️ 清空盤面</button>
+        <button @click="saveInitial" class="btn btn-primary">💾 儲存</button>
+        <button @click="clearBoard" class="btn btn-danger">🗑️ 清空</button>
       </div>
-      <p class="hint">👆 點擊盤面上的格子來設置/移除{{ editType === 'enemy' ? '敵人' : '目標' }}</p>
+      <p class="hint desktop-only">👆 點擊盤面上的格子來設置/移除{{ editType === 'enemy' ? '敵人' : '目標' }}</p>
     </div>
 
     <!-- 操作模式設定 -->
@@ -382,23 +383,65 @@ h4 {
 .form-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .form-row label {
-  min-width: 80px;
-  font-size: 14px;
+  min-width: 40px;
+  font-size: 13px;
   color: #555;
 }
 
 .form-row input,
 .form-row select {
   flex: 1;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+/* 滑桿樣式 */
+.slider-row {
+  gap: 10px;
+}
+
+.slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ddd;
+  border-radius: 3px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+}
+
+.slider-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: bold;
+  color: #667eea;
+  font-size: 16px;
 }
 
 .button-group {
@@ -625,90 +668,84 @@ hr {
     min-width: auto;
     width: 100%;
     max-width: 400px;
-    padding: 12px;
+    padding: 10px;
   }
   
   .mode-toggle-container {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   
   .mode-toggle-btn {
-    padding: 10px 6px;
-    font-size: 13px;
-  }
-  
-  h4 {
-    font-size: 13px;
-  }
-  
-  .section {
-    margin-bottom: 10px;
-  }
-  
-  .toggle-btn {
-    padding: 8px 6px;
+    padding: 8px 4px;
     font-size: 12px;
   }
   
+  h4 {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .section {
+    margin-bottom: 8px;
+  }
+  
+  .toggle-btn {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+  
   .btn {
-    padding: 10px 12px;
-    font-size: 13px;
+    padding: 8px 10px;
+    font-size: 12px;
   }
   
   .status-bar {
-    padding: 8px;
-    margin-bottom: 10px;
+    padding: 6px;
+    margin-bottom: 8px;
+    font-size: 12px;
   }
   
   .status-bar strong {
-    font-size: 16px;
+    font-size: 14px;
   }
   
   .selection-info {
-    padding: 8px;
-    margin-bottom: 10px;
-    min-height: 36px;
-    font-size: 13px;
+    padding: 6px;
+    margin-bottom: 8px;
+    min-height: 32px;
+    font-size: 11px;
   }
   
   .button-group {
-    gap: 8px;
+    gap: 6px;
   }
   
-  .form-row {
-    gap: 8px;
+  .desktop-only {
+    display: none;
   }
   
-  .form-row label {
-    min-width: 70px;
-    font-size: 13px;
-  }
-  
-  .form-row input {
-    padding: 6px;
-    font-size: 13px;
+  hr {
+    margin: 8px 0;
   }
   
   .btn-solution {
     padding: 10px;
-    font-size: 14px;
+    font-size: 13px;
   }
   
   .solution-panel {
-    padding: 10px;
-  }
-  
-  .solution-header h4 {
-    font-size: 14px;
+    padding: 8px;
+    margin-top: 8px;
   }
   
   .solution-steps {
-    max-height: 150px;
+    max-height: 120px;
   }
   
   .step-item {
-    padding: 5px 6px;
-    font-size: 12px;
+    padding: 4px 6px;
+    font-size: 11px;
+    margin-bottom: 4px;
   }
 }
 </style>

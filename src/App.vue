@@ -193,7 +193,7 @@ function handleCloseSolution() {
       />
     </main>
 
-    <footer>
+    <footer class="desktop-only">
       <p>
         <strong>編輯模式：</strong>點擊格子設置敵人(👾)或目標(⭐) | 
         <strong>操作模式：</strong>點擊選擇圈/排，然後旋轉或滑動
@@ -258,34 +258,29 @@ footer {
 /* 手機板 RWD */
 @media (max-width: 768px) {
   .app {
-    padding: 10px;
+    padding: 8px;
   }
   
   header {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
   
   header h1 {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
   
   header p {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
   }
   
   main {
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
   }
   
-  footer {
-    margin-top: 15px;
-    font-size: 11px;
-  }
-  
-  footer p {
-    margin-bottom: 5px;
+  .desktop-only {
+    display: none;
   }
 }
 </style>

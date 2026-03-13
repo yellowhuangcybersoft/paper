@@ -121,13 +121,6 @@
         🍄
       </text>
     </svg>
-    
-    <!-- 圈數標記 -->
-    <div class="ring-labels">
-      <span v-for="ring in NUM_RINGS" :key="'label-' + ring" class="ring-label">
-        圈 {{ ring }}
-      </span>
-    </div>
   </div>
 </template>
 
@@ -297,35 +290,10 @@ function onCellClick(ring, sector) {
   opacity: 0.7;
 }
 
-.ring-labels {
-  display: flex;
-  gap: 15px;
-  margin-top: 8px;
-}
-
-.ring-label {
-  font-size: 13px;
-  color: #fff;
-  background: rgba(0,0,0,0.3);
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
 /* 手機板 RWD */
 @media (max-width: 768px) {
   .board-container {
-    padding: 5px;
-  }
-  
-  .ring-labels {
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .ring-label {
-    font-size: 11px;
-    padding: 2px 6px;
+    padding: 2px;
   }
 }
 </style>

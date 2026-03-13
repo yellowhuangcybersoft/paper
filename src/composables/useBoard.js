@@ -29,7 +29,7 @@ export function useBoard() {
   const initialTargetGrid = ref(null)
 
   // 可操作次數
-  const moveLimit = ref(2)
+  const moveLimit = ref(3)
 
   // 已使用操作次數（只有換圈/排才計算）
   const moveCount = ref(0)
