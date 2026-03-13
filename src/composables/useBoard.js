@@ -433,7 +433,7 @@ export function useBoard() {
       for (let ring = 0; ring < NUM_RINGS; ring++) {
         for (const steps of [-1, 1]) {
           const newGrid = simulateRotate(g, ring, steps)
-          const newOps = [...operations, { type: 'rotate', index: ring, steps, label: `圈${ring + 1} ${steps > 0 ? '順時針' : '逆時針'}旋轉` }]
+          const newOps = [...operations, { type: 'rotate', index: ring, steps, label: `圈${ring + 1} ${steps > 0 ? '↻ 順時針' : '↺ 逆時針'}` }]
           
           // 計算當前操作步數
           const moveCount = calculateMoveCount(newOps)
@@ -449,7 +449,7 @@ export function useBoard() {
           const newGrid = simulateSlide(g, sector, steps)
           const oppositeSector = (sector + 6) % NUM_SECTORS
           const lineLabel = getSlideLineLabel(sector)
-          const newOps = [...operations, { type: 'slide', index: sector, steps, label: `${lineLabel} ${steps > 0 ? '→' : '←'}滑動` }]
+          const newOps = [...operations, { type: 'slide', index: sector, steps, label: `${lineLabel} ${steps > 0 ? '➡️ 右滑動' : '⬅️ 左滑動'}` }]
           
           // 計算當前操作步數
           const moveCount = calculateMoveCount(newOps)

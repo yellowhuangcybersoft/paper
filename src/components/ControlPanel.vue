@@ -82,8 +82,8 @@
 
       <div class="button-group">
         <template v-if="operationMode === 'rotate'">
-          <button @click="rotateLeft" class="btn btn-action" :disabled="selectedRing === null">↺ 左旋轉</button>
-          <button @click="rotateRight" class="btn btn-action" :disabled="selectedRing === null">↻ 右旋轉</button>
+          <button @click="rotateLeft" class="btn btn-action" :disabled="selectedRing === null">↺ 逆時針</button>
+          <button @click="rotateRight" class="btn btn-action" :disabled="selectedRing === null">↻ 順時針</button>
         </template>
         <template v-else>
           <button @click="slideLeft" class="btn btn-action-green" :disabled="selectedSector === null">⬅️ 左滑動</button>

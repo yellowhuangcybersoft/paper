@@ -281,7 +281,7 @@ function onCellClick(ring, sector) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px;
+  padding: 0;
 }
 
 .board-container svg {
@@ -301,7 +301,7 @@ function onCellClick(ring, sector) {
 /* 手機板 RWD */
 @media (max-width: 768px) {
   .board-container {
-    padding: 2px;
+    padding: 0;
   }
 }
 </style>
