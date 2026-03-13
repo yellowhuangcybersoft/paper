@@ -7,10 +7,13 @@ import { useBoard } from './composables/useBoard'
 // 使用盤面 composable
 const {
   grid,
+  targetGrid,
   moveLimit,
   remainingMoves,
   history,
+  currentOperation,
   toggleEnemy,
+  toggleTarget,
   saveInitialState,
   reset,
   rotateRing,
@@ -22,29 +25,50 @@ const {
 // 編輯/操作模式
 const isEditMode = ref(true)
 
-// 選中的格子
-const selectedCell = ref(null)
+// 編輯類型 (enemy / target)
+const editType = ref('enemy')
+
+// 操作模式 (rotate / slide)
+const operationMode = ref('rotate')
+
+// 選中的圈/排
+const selectedRing = ref(null)
+const selectedSector = ref(null)
 
 // 歷史記錄長度
 const historyLength = computed(() => history.value.length)
 
-// 處理格子點擊
-function handleCellClick({ ring, sector }) {
-  if (isEditMode.value) {
+// 處理格子點擊（編輯模式）
+function handleCellClick({ ring, sector, editType: type }) {
+  if (type === 'enemy') {
     toggleEnemy(ring, sector)
   } else {
-    selectedCell.value = { ring, sector }
+    toggleTarget(ring, sector)
   }
+}
+
+// 處理圈選擇（操作模式）
+function handleRingSelect(ring) {
+  selectedRing.value = ring
+}
+
+// 處理徑向選擇（操作模式）
+function handleSectorSelect(sector) {
+  selectedSector.value = sector
 }
 
 // 處理旋轉
 function handleRotateRing({ ring, steps }) {
-  rotateRing(ring, steps)
+  if (ring !== null) {
+    rotateRing(ring, steps)
+  }
 }
 
 // 處理滑動
 function handleSlideSector({ sector, steps }) {
-  slideSector(sector, steps)
+  if (sector !== null) {
+    slideSector(sector, steps)
+  }
 }
 
 // 處理取消
@@ -55,6 +79,8 @@ function handleUndo() {
 // 處理重製
 function handleReset() {
   reset()
+  selectedRing.value = null
+  selectedSector.value = null
 }
 
 // 處理儲存初始
@@ -73,7 +99,24 @@ function handleClearBoard() {
 // 處理模式變化
 function handleModeChange(editMode) {
   isEditMode.value = editMode
-  selectedCell.value = null
+  // 切換到操作模式時重置選擇
+  if (!editMode) {
+    selectedRing.value = null
+    selectedSector.value = null
+  }
+}
+
+// 處理編輯類型變化
+function handleEditTypeChange(type) {
+  editType.value = type
+}
+
+// 處理操作模式變化
+function handleOperationModeChange(mode) {
+  operationMode.value = mode
+  // 切換操作模式時重置選擇
+  selectedRing.value = null
+  selectedSector.value = null
 }
 
 // 更新操作次數上限
@@ -92,15 +135,24 @@ function updateMoveLimit(val) {
     <main>
       <BoardView
         :grid="grid"
-        :selected-cell="selectedCell"
+        :target-grid="targetGrid"
+        :selected-ring="selectedRing"
+        :selected-sector="selectedSector"
+        :operation-mode="operationMode"
         :is-edit-mode="isEditMode"
+        :edit-type="editType"
         @cell-click="handleCellClick"
+        @ring-select="handleRingSelect"
+        @sector-select="handleSectorSelect"
       />
 
       <ControlPanel
         :move-limit="moveLimit"
         :remaining-moves="remainingMoves"
         :history-length="historyLength"
+        :current-operation="currentOperation"
+        :selected-ring="selectedRing"
+        :selected-sector="selectedSector"
         @update:move-limit="updateMoveLimit"
         @rotate-ring="handleRotateRing"
         @slide-sector="handleSlideSector"
@@ -109,11 +161,17 @@ function updateMoveLimit(val) {
         @save-initial="handleSaveInitial"
         @clear-board="handleClearBoard"
         @mode-change="handleModeChange"
+        @edit-type-change="handleEditTypeChange"
+        @operation-mode-change="handleOperationModeChange"
       />
     </main>
 
     <footer>
-      <p>操作說明：編輯模式下點擊格子設置敵人，操作模式下可旋轉圈或滑動徑向排列敵人</p>
+      <p>
+        <strong>編輯模式：</strong>點擊格子設置敵人(👾)或目標(⭐) | 
+        <strong>操作模式：</strong>點擊選擇圈/排，然後旋轉或滑動
+      </p>
+      <p><small>同一圈/排可無限操作，換到別圈/排才算一步</small></p>
     </footer>
   </div>
 </template>
