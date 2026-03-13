@@ -91,7 +91,9 @@ function handleReset() {
 // 處理儲存初始
 function handleSaveInitial() {
   saveInitialState()
-  alert('已儲存初始盤面！')
+  isEditMode.value = false
+  selectedRing.value = null
+  selectedSector.value = null
 }
 
 // 處理清空
@@ -176,6 +178,7 @@ function handleCloseSolution() {
         :current-operation="currentOperation"
         :selected-ring="selectedRing"
         :selected-sector="selectedSector"
+        :is-edit-mode="isEditMode"
         :solution="solution"
         :is-solving="isSolving"
         @update:move-limit="updateMoveLimit"

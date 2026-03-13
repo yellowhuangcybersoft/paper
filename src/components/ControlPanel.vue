@@ -4,13 +4,13 @@
     <div class="mode-toggle-container">
       <button 
         :class="['mode-toggle-btn', 'left', isEditMode ? 'active' : '']"
-        @click="isEditMode = true"
+        @click="setEditMode(true)"
       >
         📝 編輯模式
       </button>
       <button 
         :class="['mode-toggle-btn', 'right', !isEditMode ? 'active' : '']"
-        @click="isEditMode = false"
+        @click="setEditMode(false)"
       >
         🎮 操作模式
       </button>
@@ -56,7 +56,7 @@
         <span>剩餘步數: <strong>{{ remainingMoves }}</strong> / {{ moveLimit }}</span>
         <br />
         <small v-if="currentOperation">
-          當前: {{ currentOperation.type === 'rotate' ? '圈 ' + (currentOperation.index + 1) : '徑 ' + (currentOperation.index + 1) }}
+          當前: {{ currentOperation.type === 'rotate' ? '圈' + (currentOperation.index + 1) : getSlideLineLabel(currentOperation.index) }}
         </small>
       </div>
 
@@ -79,14 +79,14 @@
       <!-- 當前選擇顯示 -->
       <div class="selection-info">
         <template v-if="operationMode === 'rotate'">
-          <span v-if="selectedRing !== null">已選擇: <strong>圈 {{ selectedRing + 1 }}</strong></span>
-          <span v-else class="hint-text">👆 點擊盤面選擇要旋轉的圈</span>
+          <span v-if="selectedRing !== null">已選擇: <strong>圈{{ selectedRing + 1 }}</strong></span>
+          <span v-else class="hint-text">👆 點擊盤面選擇圈</span>
         </template>
         <template v-else>
           <span v-if="selectedSector !== null">
-            已選擇: <strong>徑 {{ selectedSector + 1 }} &amp; 徑 {{ ((selectedSector + 6) % 12) + 1 }}</strong>
+            已選擇: <strong>{{ getSlideLineLabel(selectedSector) }}</strong>
           </span>
-          <span v-else class="hint-text">👆 點擊盤面選擇要滑動的徑向</span>
+          <span v-else class="hint-text">👆 點擊盤面選擇線</span>
         </template>
       </div>
 
@@ -130,10 +130,10 @@
 
       <div class="button-group">
         <button @click="undo" class="btn btn-secondary" :disabled="historyLength === 0">
-          ↩️ 取消上一步
+          ↩️ 取消此步
         </button>
         <button @click="reset" class="btn btn-warning">
-          🔄 重製盤面
+          🔄 重來
         </button>
       </div>
 
@@ -171,7 +171,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
+import { getSlideLineLabel } from '../composables/useBoard'
 
 const props = defineProps({
   moveLimit: {
@@ -197,6 +198,10 @@ const props = defineProps({
   selectedSector: {
     type: Number,
     default: null
+  },
+  isEditMode: {
+    type: Boolean,
+    default: true
   },
   solution: {
     type: Object,
@@ -224,7 +229,6 @@ const emit = defineEmits([
 ])
 
 // 本地狀態
-const isEditMode = ref(true)
 const editType = ref('enemy') // 'enemy' or 'target'
 const operationMode = ref('rotate') // 'rotate' or 'slide'
 
@@ -234,10 +238,10 @@ const moveLimit = computed({
   set: (val) => emit('update:moveLimit', val)
 })
 
-// 監聽模式變化
-watch(isEditMode, (newVal) => {
-  emit('mode-change', newVal)
-})
+// 設置編輯模式
+function setEditMode(mode) {
+  emit('mode-change', mode)
+}
 
 // 設置編輯類型
 function setEditType(type) {

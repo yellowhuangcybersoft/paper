@@ -9,6 +9,20 @@ export const CELL_EMPTY = null
 export const CELL_ENEMY = 'enemy'
 export const CELL_TARGET = 'target'
 
+// 將 sector 索引轉換為時鐘位置標籤（sector 0 對應 1點位置）
+export function getSectorClockLabel(sector) {
+  const clock = ((sector + 1) % 12) || 12
+  return `${clock}點`
+}
+
+// 取得滑動線的標籤 (如 "1-7點線")
+export function getSlideLineLabel(sector) {
+  const oppositeSector = (sector + 6) % 12
+  const clock1 = ((sector + 1) % 12) || 12
+  const clock2 = ((oppositeSector + 1) % 12) || 12
+  return `${clock1}-${clock2}點線`
+}
+
 export function useBoard() {
   // 盤面: 4圈x12格，初始為 null（無敵人）
   const grid = ref(
@@ -193,47 +207,62 @@ export function useBoard() {
     return true
   }
 
-  // 取消上一步操作
+  // 取消上一步操作（整個步驟 - 同一圈/排的所有操作）
   function undo() {
     if (history.value.length === 0) return false
 
-    const lastOp = history.value.pop()
-
-    if (lastOp.type === 'rotate') {
-      const { ring, steps } = lastOp
-      const row = grid.value[ring]
-      const n = row.length
-      const normalizedSteps = ((steps % n) + n) % n
-      grid.value[ring] = [
-        ...row.slice(n - normalizedSteps),
-        ...row.slice(0, n - normalizedSteps)
-      ]
-    } else if (lastOp.type === 'slide') {
-      const { sector, oppositeSector, steps } = lastOp
+    // 找出當前步驟的所有操作（同一 type 和 index）
+    const lastOp = history.value[history.value.length - 1]
+    const lastType = lastOp.type
+    const lastIndex = lastType === 'rotate' ? lastOp.ring : Math.min(lastOp.sector, lastOp.oppositeSector)
+    
+    // 收集屬於同一步驟的所有操作
+    const opsToUndo = []
+    while (history.value.length > 0) {
+      const op = history.value[history.value.length - 1]
+      const opType = op.type
+      const opIndex = opType === 'rotate' ? op.ring : Math.min(op.sector, op.oppositeSector)
       
-      // 組成8格的線性陣列（與滑動時相同順序）
-      const line = []
-      for (let r = NUM_RINGS - 1; r >= 0; r--) {
-        line.push({ ring: r, sector: sector })
+      if (opType === lastType && opIndex === lastIndex) {
+        opsToUndo.push(history.value.pop())
+      } else {
+        break
       }
-      for (let r = 0; r < NUM_RINGS; r++) {
-        line.push({ ring: r, sector: oppositeSector })
-      }
-      
-      // 提取當前值
-      const values = line.map(cell => grid.value[cell.ring][cell.sector])
-      
-      // 旋轉陣列（反向）
-      const n = values.length
-      const normalizedSteps = ((steps % n) + n) % n
-      const newValues = [
-        ...values.slice(n - normalizedSteps),
-        ...values.slice(0, n - normalizedSteps)
-      ]
-      
-      // 更新盤面
-      for (let i = 0; i < line.length; i++) {
-        grid.value[line[i].ring][line[i].sector] = newValues[i]
+    }
+    
+    // 反向執行所有操作
+    for (const op of opsToUndo) {
+      if (op.type === 'rotate') {
+        const { ring, steps } = op
+        const row = grid.value[ring]
+        const n = row.length
+        const normalizedSteps = ((steps % n) + n) % n
+        grid.value[ring] = [
+          ...row.slice(n - normalizedSteps),
+          ...row.slice(0, n - normalizedSteps)
+        ]
+      } else if (op.type === 'slide') {
+        const { sector, oppositeSector, steps } = op
+        
+        const line = []
+        for (let r = NUM_RINGS - 1; r >= 0; r--) {
+          line.push({ ring: r, sector: sector })
+        }
+        for (let r = 0; r < NUM_RINGS; r++) {
+          line.push({ ring: r, sector: oppositeSector })
+        }
+        
+        const values = line.map(cell => grid.value[cell.ring][cell.sector])
+        const n = values.length
+        const normalizedSteps = ((steps % n) + n) % n
+        const newValues = [
+          ...values.slice(n - normalizedSteps),
+          ...values.slice(0, n - normalizedSteps)
+        ]
+        
+        for (let i = 0; i < line.length; i++) {
+          grid.value[line[i].ring][line[i].sector] = newValues[i]
+        }
       }
     }
 
@@ -242,24 +271,19 @@ export function useBoard() {
       currentOperation.value = null
       moveCount.value = 0
     } else {
-      // 找到最後一個操作，判斷當前應該在哪個圈/排
-      const prevOp = history.value[history.value.length - 1]
-      const prevType = prevOp.type
-      const prevIndex = prevType === 'rotate' ? prevOp.ring : prevOp.sector
-      
       // 重新計算步數
       let count = 0
-      let lastOp = null
+      let prevOp = null
       for (const op of history.value) {
         const opType = op.type
-        const opIndex = opType === 'rotate' ? op.ring : op.sector
-        if (lastOp === null || lastOp.type !== opType || lastOp.index !== opIndex) {
+        const opIndex = opType === 'rotate' ? op.ring : Math.min(op.sector, op.oppositeSector)
+        if (prevOp === null || prevOp.type !== opType || prevOp.index !== opIndex) {
           count++
-          lastOp = { type: opType, index: opIndex }
+          prevOp = { type: opType, index: opIndex }
         }
       }
       moveCount.value = count
-      currentOperation.value = lastOp
+      currentOperation.value = prevOp
     }
     
     return true
@@ -424,7 +448,8 @@ export function useBoard() {
         for (const steps of [-1, 1]) {
           const newGrid = simulateSlide(g, sector, steps)
           const oppositeSector = (sector + 6) % NUM_SECTORS
-          const newOps = [...operations, { type: 'slide', index: sector, steps, label: `徑${sector + 1}&${oppositeSector + 1} ${steps > 0 ? '向右' : '向左'}滑動` }]
+          const lineLabel = getSlideLineLabel(sector)
+          const newOps = [...operations, { type: 'slide', index: sector, steps, label: `${lineLabel} ${steps > 0 ? '→' : '←'}滑動` }]
           
           // 計算當前操作步數
           const moveCount = calculateMoveCount(newOps)
