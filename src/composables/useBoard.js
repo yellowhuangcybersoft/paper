@@ -395,16 +395,52 @@ export function useBoard() {
     return count
   }
 
+  // 檢查是否所有敵人都達成 2x2（圈1圈2相鄰兩格）或 1x4（同一側4格）陣型
+  function checkAligned(g) {
+    // 收集所有敵人位置
+    const enemies = new Set()
+    for (let r = 0; r < NUM_RINGS; r++) {
+      for (let s = 0; s < NUM_SECTORS; s++) {
+        if (g[r][s] === CELL_ENEMY) {
+          enemies.add(`${r},${s}`)
+        }
+      }
+    }
+    if (enemies.size === 0) return false
+    
+    // 收集所有被陣型覆蓋的敵人
+    const covered = new Set()
+    
+    // 檢查所有 2x2 陣型：圈0和圈1（內圈1、2），相鄰兩個 sector
+    for (let s = 0; s < NUM_SECTORS; s++) {
+      const nextS = (s + 1) % NUM_SECTORS
+      const positions = [
+        `0,${s}`, `0,${nextS}`,
+        `1,${s}`, `1,${nextS}`
+      ]
+      // 檢查這 4 個位置是否都有敵人
+      if (positions.every(p => enemies.has(p))) {
+        positions.forEach(p => covered.add(p))
+      }
+    }
+    
+    // 檢查所有 1x4 陣型：同一 sector 上 4 個圈都有敵人
+    for (let s = 0; s < NUM_SECTORS; s++) {
+      const positions = [`0,${s}`, `1,${s}`, `2,${s}`, `3,${s}`]
+      if (positions.every(p => enemies.has(p))) {
+        positions.forEach(p => covered.add(p))
+      }
+    }
+    
+    // 所有敵人都必須被陣型覆蓋
+    return enemies.size > 0 && [...enemies].every(e => covered.has(e))
+  }
+
   // BFS 求解最佳解法
   function findBestSolution(maxMoves = null) {
     const startGrid = initialGrid.value ? JSON.parse(JSON.stringify(initialGrid.value)) : JSON.parse(JSON.stringify(grid.value))
     const tg = initialTargetGrid.value ? JSON.parse(JSON.stringify(initialTargetGrid.value)) : JSON.parse(JSON.stringify(targetGrid.value))
     const limit = maxMoves ?? moveLimit.value
-    
-    // 檢查是否已達成
-    if (checkWin(startGrid, tg)) {
-      return { success: true, operations: [], message: '已達成目標！' }
-    }
     
     // 檢查是否有敵人和目標
     let hasEnemy = false
@@ -415,8 +451,23 @@ export function useBoard() {
         if (tg[r][s]) hasTarget = true
       }
     }
-    if (!hasEnemy || !hasTarget) {
-      return { success: false, operations: [], message: '請先設置敵人和目標格！' }
+    
+    if (!hasEnemy) {
+      return { success: false, operations: [], message: '請先設置敵人！' }
+    }
+    
+    // 決定使用哪種勝利條件
+    const useAlignMode = !hasTarget
+    
+    // 檢查是否已達成
+    if (useAlignMode) {
+      if (checkAligned(startGrid)) {
+        return { success: true, operations: [], message: '敵人已對齊！' }
+      }
+    } else {
+      if (checkWin(startGrid, tg)) {
+        return { success: true, operations: [], message: '已達成目標！' }
+      }
     }
     
     // BFS 狀態: { grid, operations, lastOp }
@@ -475,12 +526,18 @@ export function useBoard() {
       for (const next of nextStates) {
         const stateKey = getGridState(next.grid)
         
-        if (checkWin(next.grid, tg)) {
+        // 根據模式檢查勝利條件
+        const isWin = useAlignMode ? checkAligned(next.grid) : checkWin(next.grid, tg)
+        
+        if (isWin) {
+          const successMsg = useAlignMode 
+            ? `找到對齊解法！共 ${calculateMoveCount(next.operations)} 步操作，${next.operations.length} 次旋轉/滑動`
+            : `找到解法！共 ${calculateMoveCount(next.operations)} 步操作，${next.operations.length} 次旋轉/滑動`
           return { 
             success: true, 
             operations: next.operations, 
             moveCount: calculateMoveCount(next.operations),
-            message: `找到解法！共 ${calculateMoveCount(next.operations)} 步操作，${next.operations.length} 次旋轉/滑動` 
+            message: successMsg
           }
         }
         
@@ -491,12 +548,16 @@ export function useBoard() {
       }
     }
     
+    const failMsg = useAlignMode 
+      ? `在 ${limit} 步內找不到對齊解法` 
+      : `在 ${limit} 步內找不到解法，請嘗試增加步數上限`
+    
     return { 
       success: false, 
       operations: [], 
       message: iterations >= maxIterations 
         ? '搜索超時，請嘗試減少敵人數量或增加步數上限' 
-        : `在 ${limit} 步內找不到解法，請嘗試增加步數上限`
+        : failMsg
     }
   }
 
