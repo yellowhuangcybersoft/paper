@@ -120,17 +120,6 @@
       >
         🍄
       </text>
-        <!-- 右下角剩餘步數（僅操作模式顯示，且有 moveLimit 時） -->
-        <g v-if="!isEditMode && typeof remainingMoves === 'number' && typeof moveLimit === 'number'">
-          <rect :x="size - overlayWidth - overlayMargin" :y="size - overlayHeight - overlayMargin" :width="overlayWidth" :height="overlayHeight" rx="12" fill="#fff" fill-opacity="0.85" />
-          <text :x="size - overlayWidth/2 - overlayMargin" :y="size - overlayMargin - overlayHeight/2 + 6" text-anchor="middle" font-size="18" fill="#1976d2" font-weight="bold">
-            步數: {{ remainingMoves }} / {{ moveLimit }}
-          </text>
-        </g>
-    // overlay 尺寸與邊距，RWD 支援
-    const overlayWidth = computed(() => (window.innerWidth <= 500 ? 90 : 80))
-    const overlayHeight = computed(() => (window.innerWidth <= 500 ? 40 : 36))
-    const overlayMargin = computed(() => (window.innerWidth <= 500 ? 8 : 10))
     </svg>
   </div>
 </template>
