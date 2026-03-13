@@ -215,6 +215,7 @@ function handleCloseSolution() {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  touch-action: manipulation;
 }
 
 body {
@@ -267,7 +268,7 @@ header p {
 
 main {
   display: flex;
-  gap: 20px;
+  gap: 10px;
   justify-content: center;
   align-items: flex-start;
   flex-wrap: wrap;
@@ -307,7 +308,7 @@ footer {
   main {
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
   }
   
   .desktop-only {
