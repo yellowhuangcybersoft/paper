@@ -43,6 +43,89 @@ npm run build
 
 ---
 
+## 🌐 部署到網路
+
+### 方法一：GitHub Pages（推薦）
+
+#### 步驟 1：建立 GitHub 倉庫
+
+1. 前往 [GitHub](https://github.com/) 並登入
+2. 點擊右上角 **+** → **New repository**
+3. 命名為 `paper-mario-battle-simulator`（或自訂名稱）
+4. 設為 **Public**
+5. 點擊 **Create repository**
+
+#### 步驟 2：推送程式碼
+
+```bash
+# 初始化 Git（如果尚未初始化）
+git init
+
+# 添加所有檔案
+git add .
+
+# 提交
+git commit -m "Initial commit"
+
+# 設定遠端倉庫（替換 <USERNAME> 為你的 GitHub 帳號）
+git remote add origin https://github.com/<USERNAME>/paper-mario-battle-simulator.git
+
+# 推送到 GitHub
+git branch -M main
+git push -u origin main
+```
+
+#### 步驟 3：部署到 GitHub Pages
+
+```bash
+# 自動建置並部署
+npm run deploy
+```
+
+#### 步驟 4：設定 GitHub Pages
+
+1. 前往你的 GitHub 倉庫
+2. 點擊 **Settings** → **Pages**
+3. 在 **Source** 選擇 `gh-pages` 分支
+4. 點擊 **Save**
+5. 等待幾分鐘後，你的網站將上線於：
+   ```
+   https://<USERNAME>.github.io/paper-mario-battle-simulator/
+   ```
+
+⚠️ **注意**：如果你使用不同的倉庫名稱，需要修改 `vite.config.js` 中的 `base` 路徑：
+
+```javascript
+base: '/你的倉庫名稱/'
+```
+
+---
+
+### 方法二：Vercel（最簡單）
+
+1. 前往 [Vercel](https://vercel.com/) 並使用 GitHub 登入
+2. 點擊 **Add New** → **Project**
+3. 選擇你的 GitHub 倉庫
+4. 框架預設會自動偵測為 Vite
+5. 點擊 **Deploy**
+6. 完成！Vercel 會自動給你一個網址
+
+✅ 優點：每次 push 到 GitHub 時會自動重新部署
+
+---
+
+### 方法三：Netlify
+
+1. 前往 [Netlify](https://www.netlify.com/) 並使用 GitHub 登入
+2. 點擊 **Add new site** → **Import an existing project**
+3. 選擇你的 GitHub 倉庫
+4. 建置設定：
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+5. 點擊 **Deploy site**
+
+---
+
 ## 🎯 功能介紹
 
 ### 盤面結構
