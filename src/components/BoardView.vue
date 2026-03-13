@@ -280,7 +280,12 @@ function onCellClick(ring, sector) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 10px;
+}
+
+.board-container svg {
+  max-width: 100%;
+  height: auto;
 }
 
 .cell {
@@ -294,15 +299,33 @@ function onCellClick(ring, sector) {
 
 .ring-labels {
   display: flex;
-  gap: 20px;
-  margin-top: 10px;
+  gap: 15px;
+  margin-top: 8px;
 }
 
 .ring-label {
-  font-size: 14px;
+  font-size: 13px;
   color: #fff;
   background: rgba(0,0,0,0.3);
   padding: 2px 8px;
   border-radius: 4px;
+}
+
+/* 手機板 RWD */
+@media (max-width: 768px) {
+  .board-container {
+    padding: 5px;
+  }
+  
+  .ring-labels {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .ring-label {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
 }
 </style>

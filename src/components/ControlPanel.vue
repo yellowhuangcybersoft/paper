@@ -1,13 +1,19 @@
 <template>
   <div class="control-panel">
-    <h3>控制面板</h3>
-    
-    <!-- 模式切換 -->
-    <div class="section">
-      <label class="mode-switch">
-        <input type="checkbox" v-model="isEditMode" />
-        <span>{{ isEditMode ? '📝 編輯模式' : '🎮 操作模式' }}</span>
-      </label>
+    <!-- 模式切換 - 左右開關按鈕 -->
+    <div class="mode-toggle-container">
+      <button 
+        :class="['mode-toggle-btn', 'left', isEditMode ? 'active' : '']"
+        @click="isEditMode = true"
+      >
+        📝 編輯模式
+      </button>
+      <button 
+        :class="['mode-toggle-btn', 'right', !isEditMode ? 'active' : '']"
+        @click="isEditMode = false"
+      >
+        🎮 操作模式
+      </button>
     </div>
 
     <!-- 編輯模式設定 -->
@@ -129,6 +135,36 @@
           🔄 重製盤面
         </button>
       </div>
+
+      <hr />
+
+      <!-- 最佳解法按鈕 -->
+      <button 
+        @click="findSolution" 
+        class="btn btn-solution" 
+        :disabled="isSolving"
+      >
+        {{ isSolving ? '🔍 搜尋中...' : '💡 尋找最佳解法' }}
+      </button>
+    </div>
+
+    <!-- 解法顯示區域 -->
+    <div v-if="solution" class="solution-panel">
+      <div class="solution-header">
+        <h4>{{ solution.success ? '✅ 找到解法！' : '❌ 無解' }}</h4>
+        <button class="close-btn" @click="closeSolution">✕</button>
+      </div>
+      <p class="solution-message">{{ solution.message }}</p>
+      <div v-if="solution.success && solution.operations.length > 0" class="solution-steps">
+        <div 
+          v-for="(op, index) in solution.operations" 
+          :key="index" 
+          class="step-item"
+        >
+          <span class="step-number">{{ index + 1 }}.</span>
+          <span class="step-label">{{ op.label }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -160,6 +196,14 @@ const props = defineProps({
   selectedSector: {
     type: Number,
     default: null
+  },
+  solution: {
+    type: Object,
+    default: null
+  },
+  isSolving: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -173,7 +217,9 @@ const emit = defineEmits([
   'clear-board',
   'mode-change',
   'edit-type-change',
-  'operation-mode-change'
+  'operation-mode-change',
+  'find-solution',
+  'close-solution'
 ])
 
 // 本地狀態
@@ -236,22 +282,62 @@ function saveInitial() {
 function clearBoard() {
   emit('clear-board')
 }
+
+function findSolution() {
+  emit('find-solution')
+}
+
+function closeSolution() {
+  emit('close-solution')
+}
 </script>
 
 <style scoped>
 .control-panel {
   background: #f8f9fa;
   border-radius: 12px;
-  padding: 20px;
-  min-width: 300px;
+  padding: 16px;
+  min-width: 280px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-h3 {
-  margin: 0 0 15px 0;
+/* 模式切換按鈕 */
+.mode-toggle-container {
+  display: flex;
+  background: #e9ecef;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+.mode-toggle-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.mode-toggle-btn.left {
+  border-radius: 8px 0 0 8px;
+}
+
+.mode-toggle-btn.right {
+  border-radius: 0 8px 8px 0;
+}
+
+.mode-toggle-btn.active {
+  background: #fff;
   color: #333;
-  border-bottom: 2px solid #e9ecef;
-  padding-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.mode-toggle-btn:not(.active):hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 h4 {
@@ -261,21 +347,7 @@ h4 {
 }
 
 .section {
-  margin-bottom: 15px;
-}
-
-.mode-switch {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #333;
-}
-
-.mode-switch input {
-  width: 20px;
-  height: 20px;
+  margin-bottom: 12px;
 }
 
 .edit-type-toggle,
@@ -457,6 +529,186 @@ h4 {
 hr {
   border: none;
   border-top: 1px solid #e0e0e0;
-  margin: 15px 0;
+  margin: 12px 0;
+}
+
+/* 解法按鈕 */
+.btn-solution {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 15px;
+}
+
+.btn-solution:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-solution:disabled {
+  opacity: 0.7;
+}
+
+/* 解法面板 */
+.solution-panel {
+  margin-top: 12px;
+  background: #fff;
+  border: 2px solid #667eea;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.solution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.solution-header h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #999;
+  padding: 0 4px;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.solution-message {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.solution-steps {
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.step-number {
+  font-weight: bold;
+  color: #667eea;
+  margin-right: 8px;
+  min-width: 20px;
+}
+
+.step-label {
+  color: #333;
+}
+
+/* 手機板 RWD */
+@media (max-width: 768px) {
+  .control-panel {
+    min-width: auto;
+    width: 100%;
+    max-width: 400px;
+    padding: 12px;
+  }
+  
+  .mode-toggle-container {
+    margin-bottom: 12px;
+  }
+  
+  .mode-toggle-btn {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+  
+  h4 {
+    font-size: 13px;
+  }
+  
+  .section {
+    margin-bottom: 10px;
+  }
+  
+  .toggle-btn {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  
+  .btn {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .status-bar {
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .status-bar strong {
+    font-size: 16px;
+  }
+  
+  .selection-info {
+    padding: 8px;
+    margin-bottom: 10px;
+    min-height: 36px;
+    font-size: 13px;
+  }
+  
+  .button-group {
+    gap: 8px;
+  }
+  
+  .form-row {
+    gap: 8px;
+  }
+  
+  .form-row label {
+    min-width: 70px;
+    font-size: 13px;
+  }
+  
+  .form-row input {
+    padding: 6px;
+    font-size: 13px;
+  }
+  
+  .btn-solution {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .solution-panel {
+    padding: 10px;
+  }
+  
+  .solution-header h4 {
+    font-size: 14px;
+  }
+  
+  .solution-steps {
+    max-height: 150px;
+  }
+  
+  .step-item {
+    padding: 5px 6px;
+    font-size: 12px;
+  }
 }
 </style>

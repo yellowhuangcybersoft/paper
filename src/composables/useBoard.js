@@ -278,6 +278,203 @@ export function useBoard() {
     currentOperation.value = null
   }
 
+  // 獲取盤面狀態的字串表示（用於狀態比較）
+  function getGridState(g) {
+    return JSON.stringify(g)
+  }
+
+  // 檢查是否達成目標（所有敵人都在目標格內）
+  function checkWin(g, tg) {
+    // 找出所有敵人位置
+    const enemies = []
+    for (let r = 0; r < NUM_RINGS; r++) {
+      for (let s = 0; s < NUM_SECTORS; s++) {
+        if (g[r][s] === CELL_ENEMY) {
+          enemies.push({ ring: r, sector: s })
+        }
+      }
+    }
+    
+    // 檢查是否有敵人
+    if (enemies.length === 0) return false
+    
+    // 檢查所有敵人是否都在目標格內
+    return enemies.every(e => tg[e.ring][e.sector])
+  }
+
+  // 模擬旋轉操作（不影響實際盤面）
+  function simulateRotate(g, ring, steps) {
+    const newGrid = g.map(row => [...row])
+    const row = newGrid[ring]
+    const n = row.length
+    const normalizedSteps = ((steps % n) + n) % n
+    newGrid[ring] = [
+      ...row.slice(n - normalizedSteps),
+      ...row.slice(0, n - normalizedSteps)
+    ]
+    return newGrid
+  }
+
+  // 模擬滑動操作（不影響實際盤面）
+  function simulateSlide(g, sector, steps) {
+    const newGrid = g.map(row => [...row])
+    const oppositeSector = (sector + 6) % NUM_SECTORS
+    
+    // 組成8格的線性陣列
+    const line = []
+    for (let r = NUM_RINGS - 1; r >= 0; r--) {
+      line.push({ ring: r, sector: sector })
+    }
+    for (let r = 0; r < NUM_RINGS; r++) {
+      line.push({ ring: r, sector: oppositeSector })
+    }
+    
+    // 提取當前值
+    const values = line.map(cell => newGrid[cell.ring][cell.sector])
+    
+    // 旋轉陣列
+    const n = values.length
+    const normalizedSteps = ((steps % n) + n) % n
+    const newValues = [
+      ...values.slice(n - normalizedSteps),
+      ...values.slice(0, n - normalizedSteps)
+    ]
+    
+    // 更新盤面
+    for (let i = 0; i < line.length; i++) {
+      newGrid[line[i].ring][line[i].sector] = newValues[i]
+    }
+    return newGrid
+  }
+
+  // 計算操作步數（換圈/排才算一步）
+  function calculateMoveCount(operations) {
+    if (operations.length === 0) return 0
+    
+    let count = 1
+    let lastOp = operations[0]
+    
+    for (let i = 1; i < operations.length; i++) {
+      const op = operations[i]
+      const lastIndex = lastOp.type === 'slide' 
+        ? Math.min(lastOp.index, (lastOp.index + 6) % NUM_SECTORS)
+        : lastOp.index
+      const currentIndex = op.type === 'slide'
+        ? Math.min(op.index, (op.index + 6) % NUM_SECTORS)
+        : op.index
+      
+      if (lastOp.type !== op.type || lastIndex !== currentIndex) {
+        count++
+        lastOp = op
+      }
+    }
+    return count
+  }
+
+  // BFS 求解最佳解法
+  function findBestSolution(maxMoves = null) {
+    const startGrid = initialGrid.value ? JSON.parse(JSON.stringify(initialGrid.value)) : JSON.parse(JSON.stringify(grid.value))
+    const tg = initialTargetGrid.value ? JSON.parse(JSON.stringify(initialTargetGrid.value)) : JSON.parse(JSON.stringify(targetGrid.value))
+    const limit = maxMoves ?? moveLimit.value
+    
+    // 檢查是否已達成
+    if (checkWin(startGrid, tg)) {
+      return { success: true, operations: [], message: '已達成目標！' }
+    }
+    
+    // 檢查是否有敵人和目標
+    let hasEnemy = false
+    let hasTarget = false
+    for (let r = 0; r < NUM_RINGS; r++) {
+      for (let s = 0; s < NUM_SECTORS; s++) {
+        if (startGrid[r][s] === CELL_ENEMY) hasEnemy = true
+        if (tg[r][s]) hasTarget = true
+      }
+    }
+    if (!hasEnemy || !hasTarget) {
+      return { success: false, operations: [], message: '請先設置敵人和目標格！' }
+    }
+    
+    // BFS 狀態: { grid, operations, lastOp }
+    const queue = [{ grid: startGrid, operations: [], lastOp: null }]
+    const visited = new Set()
+    visited.add(getGridState(startGrid))
+    
+    // 生成所有可能的操作
+    function getNextStates(state) {
+      const results = []
+      const { grid: g, operations, lastOp } = state
+      
+      // 旋轉操作（每圈左右各一次）
+      for (let ring = 0; ring < NUM_RINGS; ring++) {
+        for (const steps of [-1, 1]) {
+          const newGrid = simulateRotate(g, ring, steps)
+          const newOps = [...operations, { type: 'rotate', index: ring, steps, label: `圈${ring + 1} ${steps > 0 ? '順時針' : '逆時針'}旋轉` }]
+          
+          // 計算當前操作步數
+          const moveCount = calculateMoveCount(newOps)
+          if (moveCount <= limit) {
+            results.push({ grid: newGrid, operations: newOps, lastOp: { type: 'rotate', index: ring } })
+          }
+        }
+      }
+      
+      // 滑動操作（0-5 對應 6 條直線，每條左右各一次）
+      for (let sector = 0; sector < 6; sector++) {
+        for (const steps of [-1, 1]) {
+          const newGrid = simulateSlide(g, sector, steps)
+          const oppositeSector = (sector + 6) % NUM_SECTORS
+          const newOps = [...operations, { type: 'slide', index: sector, steps, label: `徑${sector + 1}&${oppositeSector + 1} ${steps > 0 ? '向右' : '向左'}滑動` }]
+          
+          // 計算當前操作步數
+          const moveCount = calculateMoveCount(newOps)
+          if (moveCount <= limit) {
+            results.push({ grid: newGrid, operations: newOps, lastOp: { type: 'slide', index: sector } })
+          }
+        }
+      }
+      
+      return results
+    }
+    
+    // BFS 搜索
+    let iterations = 0
+    const maxIterations = 100000 // 防止無限循環
+    
+    while (queue.length > 0 && iterations < maxIterations) {
+      iterations++
+      const current = queue.shift()
+      
+      const nextStates = getNextStates(current)
+      
+      for (const next of nextStates) {
+        const stateKey = getGridState(next.grid)
+        
+        if (checkWin(next.grid, tg)) {
+          return { 
+            success: true, 
+            operations: next.operations, 
+            moveCount: calculateMoveCount(next.operations),
+            message: `找到解法！共 ${calculateMoveCount(next.operations)} 步操作，${next.operations.length} 次旋轉/滑動` 
+          }
+        }
+        
+        if (!visited.has(stateKey)) {
+          visited.add(stateKey)
+          queue.push(next)
+        }
+      }
+    }
+    
+    return { 
+      success: false, 
+      operations: [], 
+      message: iterations >= maxIterations 
+        ? '搜索超時，請嘗試減少敵人數量或增加步數上限' 
+        : `在 ${limit} 步內找不到解法，請嘗試增加步數上限`
+    }
+  }
+
   return {
     grid,
     targetGrid,
@@ -298,6 +495,8 @@ export function useBoard() {
     rotateRing,
     slideSector,
     undo,
-    clearBoard
+    clearBoard,
+    findBestSolution,
+    checkWin
   }
 }

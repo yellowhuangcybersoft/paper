@@ -19,7 +19,8 @@ const {
   rotateRing,
   slideSector,
   undo,
-  clearBoard
+  clearBoard,
+  findBestSolution
 } = useBoard()
 
 // 編輯/操作模式
@@ -34,6 +35,10 @@ const operationMode = ref('rotate')
 // 選中的圈/排
 const selectedRing = ref(null)
 const selectedSector = ref(null)
+
+// 解法相關
+const solution = ref(null)
+const isSolving = ref(false)
 
 // 歷史記錄長度
 const historyLength = computed(() => history.value.length)
@@ -123,6 +128,24 @@ function handleOperationModeChange(mode) {
 function updateMoveLimit(val) {
   moveLimit.value = val
 }
+
+// 尋找最佳解法
+function handleFindSolution() {
+  isSolving.value = true
+  solution.value = null
+  
+  // 使用 setTimeout 讓 UI 有機會更新
+  setTimeout(() => {
+    const result = findBestSolution()
+    solution.value = result
+    isSolving.value = false
+  }, 50)
+}
+
+// 關閉解法視窗
+function handleCloseSolution() {
+  solution.value = null
+}
 </script>
 
 <template>
@@ -153,6 +176,8 @@ function updateMoveLimit(val) {
         :current-operation="currentOperation"
         :selected-ring="selectedRing"
         :selected-sector="selectedSector"
+        :solution="solution"
+        :is-solving="isSolving"
         @update:move-limit="updateMoveLimit"
         @rotate-ring="handleRotateRing"
         @slide-sector="handleSlideSector"
@@ -163,6 +188,8 @@ function updateMoveLimit(val) {
         @mode-change="handleModeChange"
         @edit-type-change="handleEditTypeChange"
         @operation-mode-change="handleOperationModeChange"
+        @find-solution="handleFindSolution"
+        @close-solution="handleCloseSolution"
       />
     </main>
 
@@ -198,23 +225,23 @@ body {
 header {
   text-align: center;
   color: white;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 header h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 header p {
-  font-size: 1.1rem;
+  font-size: 1rem;
   opacity: 0.9;
 }
 
 main {
   display: flex;
-  gap: 30px;
+  gap: 20px;
   justify-content: center;
   align-items: flex-start;
   flex-wrap: wrap;
@@ -223,8 +250,42 @@ main {
 footer {
   text-align: center;
   color: white;
-  margin-top: 30px;
+  margin-top: 20px;
   opacity: 0.8;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+/* 手機板 RWD */
+@media (max-width: 768px) {
+  .app {
+    padding: 10px;
+  }
+  
+  header {
+    margin-bottom: 12px;
+  }
+  
+  header h1 {
+    font-size: 1.4rem;
+  }
+  
+  header p {
+    font-size: 0.85rem;
+  }
+  
+  main {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  footer {
+    margin-top: 15px;
+    font-size: 11px;
+  }
+  
+  footer p {
+    margin-bottom: 5px;
+  }
 }
 </style>
