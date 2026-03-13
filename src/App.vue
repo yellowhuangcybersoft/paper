@@ -166,6 +166,8 @@ function handleCloseSolution() {
         :operation-mode="operationMode"
         :is-edit-mode="isEditMode"
         :edit-type="editType"
+        :remaining-moves="remainingMoves"
+        :move-limit="moveLimit"
         @cell-click="handleCellClick"
         @ring-select="handleRingSelect"
         @sector-select="handleSectorSelect"
