@@ -42,7 +42,6 @@
         <span class="slider-value">{{ moveLimit }}</span>
       </div>
       <div class="button-group">
-        <button @click="saveInitial" class="btn btn-primary">💾 儲存</button>
         <button @click="clearBoard" class="btn btn-danger">🗑️ 清空</button>
       </div>
       <p class="hint desktop-only">👆 點擊盤面上的格子來設置/移除{{ editType === 'enemy' ? '敵人' : '目標' }}</p>
@@ -167,7 +166,6 @@ const emit = defineEmits([
   'slide-sector',
   'undo',
   'reset',
-  'save-initial',
   'clear-board',
   'mode-change',
   'edit-type-change',
@@ -228,10 +226,6 @@ function reset() {
   emit('reset')
 }
 
-function saveInitial() {
-  emit('save-initial')
-}
-
 function clearBoard() {
   emit('clear-board')
 }
@@ -259,17 +253,17 @@ function closeSolution() {
   display: flex;
   background: #e9ecef;
   border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 16px;
+  padding: 3px;
+  margin-bottom: 12px;
 }
 
 .mode-toggle-btn {
   flex: 1;
-  padding: 12px 8px;
+  padding: 8px 6px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: bold;
   color: #666;
   transition: all 0.3s ease;
@@ -294,30 +288,30 @@ function closeSolution() {
 }
 
 h4 {
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   color: #555;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .section {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .edit-type-toggle,
 .operation-mode-toggle {
   display: flex;
   gap: 8px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .toggle-btn {
   flex: 1;
-  padding: 10px;
+  padding: 6px 8px;
   border: 2px solid #ddd;
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   transition: all 0.2s;
 }
@@ -398,7 +392,7 @@ h4 {
 
 .button-group {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -408,11 +402,11 @@ h4 {
 
 .btn {
   flex: 1;
-  padding: 10px 15px;
+  padding: 6px 10px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: bold;
   transition: all 0.2s;
 }
@@ -530,7 +524,7 @@ hr {
 /* 解法按鈕 */
 .btn-solution {
   width: 100%;
-  padding: 12px;
+  padding: 8px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-size: 15px;

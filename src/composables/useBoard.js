@@ -103,7 +103,19 @@ export function useBoard() {
   // 重製盤面（回到初始狀態）
   function reset() {
     if (initialGrid.value) {
-      grid.value = JSON.parse(JSON.stringify(initialGrid.value))
+      // 逐格重置以確保響應式更新
+      for (let r = 0; r < NUM_RINGS; r++) {
+        for (let s = 0; s < NUM_SECTORS; s++) {
+          grid.value[r][s] = initialGrid.value[r][s]
+        }
+      }
+    }
+    if (initialTargetGrid.value) {
+      for (let r = 0; r < NUM_RINGS; r++) {
+        for (let s = 0; s < NUM_SECTORS; s++) {
+          targetGrid.value[r][s] = initialTargetGrid.value[r][s]
+        }
+      }
     }
     history.value = []
     moveCount.value = 0

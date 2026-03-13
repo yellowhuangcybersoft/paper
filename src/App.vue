@@ -88,14 +88,6 @@ function handleReset() {
   selectedSector.value = null
 }
 
-// 處理儲存初始
-function handleSaveInitial() {
-  saveInitialState()
-  isEditMode.value = false
-  selectedRing.value = null
-  selectedSector.value = null
-}
-
 // 處理清空
 function handleClearBoard() {
   if (confirm('確定要清空盤面嗎？')) {
@@ -105,12 +97,13 @@ function handleClearBoard() {
 
 // 處理模式變化
 function handleModeChange(editMode) {
-  isEditMode.value = editMode
-  // 切換到操作模式時重置選擇
+  // 切換到操作模式時自動儲存初始狀態
   if (!editMode) {
+    saveInitialState()
     selectedRing.value = null
     selectedSector.value = null
   }
+  isEditMode.value = editMode
 }
 
 // 處理編輯類型變化
@@ -194,7 +187,6 @@ function handleCloseSolution() {
         @slide-sector="handleSlideSector"
         @undo="handleUndo"
         @reset="handleReset"
-        @save-initial="handleSaveInitial"
         @clear-board="handleClearBoard"
         @mode-change="handleModeChange"
         @edit-type-change="handleEditTypeChange"
