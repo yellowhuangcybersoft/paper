@@ -37,18 +37,30 @@
         stroke-opacity="0.3"
       />
       
-      <!-- 高亮選中的徑向（操作模式 - 滑動） -->
-      <line
-        v-if="!isEditMode && operationMode === 'slide' && selectedSector !== null"
-        :x1="center + Math.cos(selectedSector * sectorAngle - Math.PI / 2) * innerRadius"
-        :y1="center + Math.sin(selectedSector * sectorAngle - Math.PI / 2) * innerRadius"
-        :x2="center + Math.cos(selectedSector * sectorAngle - Math.PI / 2) * outerRadius"
-        :y2="center + Math.sin(selectedSector * sectorAngle - Math.PI / 2) * outerRadius"
-        stroke="#4CAF50"
-        stroke-width="25"
-        stroke-opacity="0.4"
-        stroke-linecap="round"
-      />
+      <!-- 高亮選中的徑向（操作模式 - 滑動，包含對角線） -->
+      <template v-if="!isEditMode && operationMode === 'slide' && selectedSector !== null">
+        <line
+          :x1="center + Math.cos(selectedSector * sectorAngle - Math.PI / 2) * innerRadius"
+          :y1="center + Math.sin(selectedSector * sectorAngle - Math.PI / 2) * innerRadius"
+          :x2="center + Math.cos(selectedSector * sectorAngle - Math.PI / 2) * outerRadius"
+          :y2="center + Math.sin(selectedSector * sectorAngle - Math.PI / 2) * outerRadius"
+          stroke="#4CAF50"
+          stroke-width="25"
+          stroke-opacity="0.4"
+          stroke-linecap="round"
+        />
+        <!-- 對角線徑向 -->
+        <line
+          :x1="center + Math.cos(((selectedSector + 6) % 12) * sectorAngle - Math.PI / 2) * innerRadius"
+          :y1="center + Math.sin(((selectedSector + 6) % 12) * sectorAngle - Math.PI / 2) * innerRadius"
+          :x2="center + Math.cos(((selectedSector + 6) % 12) * sectorAngle - Math.PI / 2) * outerRadius"
+          :y2="center + Math.sin(((selectedSector + 6) % 12) * sectorAngle - Math.PI / 2) * outerRadius"
+          stroke="#4CAF50"
+          stroke-width="25"
+          stroke-opacity="0.4"
+          stroke-linecap="round"
+        />
+      </template>
       
       <!-- 格子（可點擊） -->
       <g v-for="ring in NUM_RINGS" :key="'ring-' + ring">
@@ -70,6 +82,7 @@
             dominant-baseline="central"
             font-size="14"
             fill="#4CAF50"
+            pointer-events="none"
           >
             ⭐
           </text>
@@ -82,6 +95,7 @@
             dominant-baseline="central"
             font-size="16"
             fill="#333"
+            pointer-events="none"
           >
             👾
           </text>
@@ -217,8 +231,12 @@ function getCellStroke(ring, sector) {
     if (props.operationMode === 'rotate' && props.selectedRing === ring) {
       return '#ff6b6b'
     }
-    if (props.operationMode === 'slide' && props.selectedSector === sector) {
-      return '#4CAF50'
+    if (props.operationMode === 'slide' && props.selectedSector !== null) {
+      // 檢查是否為選中的徑向或其對角線
+      const oppositeSector = (props.selectedSector + 6) % 12
+      if (sector === props.selectedSector || sector === oppositeSector) {
+        return '#4CAF50'
+      }
     }
   }
   return '#999'
@@ -230,8 +248,12 @@ function getCellStrokeWidth(ring, sector) {
     if (props.operationMode === 'rotate' && props.selectedRing === ring) {
       return 3
     }
-    if (props.operationMode === 'slide' && props.selectedSector === sector) {
-      return 3
+    if (props.operationMode === 'slide' && props.selectedSector !== null) {
+      // 檢查是否為選中的徑向或其對角線
+      const oppositeSector = (props.selectedSector + 6) % 12
+      if (sector === props.selectedSector || sector === oppositeSector) {
+        return 3
+      }
     }
   }
   return 1

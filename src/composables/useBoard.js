@@ -143,29 +143,50 @@ export function useBoard() {
   }
 
   // 滑動徑向（steps > 0 向外，< 0 向內）
+  // 對角線（sector 和 sector+6）一起滑動
   function slideSector(sector, steps) {
+    // 計算對角線徑向
+    const oppositeSector = (sector + 6) % NUM_SECTORS
+    
+    // 使用較小的 sector 作為操作索引（確保徑1和徑7視為同一操作）
+    const operationIndex = Math.min(sector, oppositeSector)
+    
     // 檢查是否可以操作
     if (currentOperation.value !== null && 
-        (currentOperation.value.type !== 'slide' || currentOperation.value.index !== sector) &&
+        (currentOperation.value.type !== 'slide' || currentOperation.value.index !== operationIndex) &&
         remainingMoves.value <= 0) {
       return false
     }
 
-    const col = grid.value.map(row => row[sector])
-    const n = col.length
+    // 滑動第一條徑向
+    const col1 = grid.value.map(row => row[sector])
+    const n = col1.length
     const normalizedSteps = ((steps % n) + n) % n
-    const newCol = [
-      ...col.slice(n - normalizedSteps),
-      ...col.slice(0, n - normalizedSteps)
+    const newCol1 = [
+      ...col1.slice(n - normalizedSteps),
+      ...col1.slice(0, n - normalizedSteps)
+    ]
+    
+    // 滑動對角線徑向（方向相反）
+    const col2 = grid.value.map(row => row[oppositeSector])
+    const oppositeSteps = ((-steps % n) + n) % n
+    const newCol2 = [
+      ...col2.slice(n - oppositeSteps),
+      ...col2.slice(0, n - oppositeSteps)
     ]
 
     // 檢查並更新步數
-    checkAndIncrementMove('slide', sector)
+    checkAndIncrementMove('slide', operationIndex)
 
     // 儲存操作歷史
-    history.value.push({ type: 'slide', sector, steps: -steps, wasNewMove: false })
-    newCol.forEach((val, r) => {
+    history.value.push({ type: 'slide', sector, oppositeSector, steps: -steps, wasNewMove: false })
+    
+    // 更新盤面
+    newCol1.forEach((val, r) => {
       grid.value[r][sector] = val
+    })
+    newCol2.forEach((val, r) => {
+      grid.value[r][oppositeSector] = val
     })
     return true
   }
@@ -186,17 +207,32 @@ export function useBoard() {
         ...row.slice(0, n - normalizedSteps)
       ]
     } else if (lastOp.type === 'slide') {
-      const { sector, steps } = lastOp
-      const col = grid.value.map(row => row[sector])
-      const n = col.length
+      const { sector, oppositeSector, steps } = lastOp
+      const n = NUM_RINGS
       const normalizedSteps = ((steps % n) + n) % n
-      const newCol = [
-        ...col.slice(n - normalizedSteps),
-        ...col.slice(0, n - normalizedSteps)
+      
+      // 還原第一條徑向
+      const col1 = grid.value.map(row => row[sector])
+      const newCol1 = [
+        ...col1.slice(n - normalizedSteps),
+        ...col1.slice(0, n - normalizedSteps)
       ]
-      newCol.forEach((val, r) => {
+      newCol1.forEach((val, r) => {
         grid.value[r][sector] = val
       })
+      
+      // 還原對角線徑向
+      if (oppositeSector !== undefined) {
+        const col2 = grid.value.map(row => row[oppositeSector])
+        const oppositeSteps = ((-steps % n) + n) % n
+        const newCol2 = [
+          ...col2.slice(n - oppositeSteps),
+          ...col2.slice(0, n - oppositeSteps)
+        ]
+        newCol2.forEach((val, r) => {
+          grid.value[r][oppositeSector] = val
+        })
+      }
     }
 
     // 回溯當前操作狀態

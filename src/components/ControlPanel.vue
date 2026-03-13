@@ -76,7 +76,9 @@
           <span v-else class="hint-text">👆 點擊盤面選擇要旋轉的圈</span>
         </template>
         <template v-else>
-          <span v-if="selectedSector !== null">已選擇: <strong>徑 {{ selectedSector + 1 }}</strong></span>
+          <span v-if="selectedSector !== null">
+            已選擇: <strong>徑 {{ selectedSector + 1 }} &amp; 徑 {{ ((selectedSector + 6) % 12) + 1 }}</strong>
+          </span>
           <span v-else class="hint-text">👆 點擊盤面選擇要滑動的徑向</span>
         </template>
       </div>
