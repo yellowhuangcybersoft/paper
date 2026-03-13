@@ -51,12 +51,6 @@
     <!-- 操作模式設定 -->
     <div v-else class="section operation-section">
       <h4>操作設定</h4>
-      
-      <div class="status-bar">
-        <small v-if="currentOperation">
-          當前: {{ currentOperation.type === 'rotate' ? '圈' + (currentOperation.index + 1) : getSlideLineLabel(currentOperation.index) }}
-        </small>
-      </div>
 
       <!-- 操作模式切換 -->
 
@@ -67,17 +61,6 @@
         <button :class="['toggle-btn', operationMode === 'slide' ? 'active' : '']" @click="setOperationMode('slide')">
           ↔️ 滑動線
         </button>
-      </div>
-
-      <div class="selection-info">
-        <template v-if="operationMode === 'rotate'">
-          <span v-if="selectedRing !== null">圈{{ selectedRing + 1 }}</span>
-          <span v-else class="hint-text">選圈</span>
-        </template>
-        <template v-else>
-          <span v-if="selectedSector !== null">{{ getSlideLineLabel(selectedSector) }}</span>
-          <span v-else class="hint-text">選線</span>
-        </template>
       </div>
 
       <div class="button-group">

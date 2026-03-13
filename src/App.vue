@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import BoardView from './components/BoardView.vue'
 import ControlPanel from './components/ControlPanel.vue'
-import { useBoard } from './composables/useBoard'
+import { useBoard, getSlideLineLabel } from './composables/useBoard'
 
 // 使用盤面 composable
 const {
@@ -155,7 +155,11 @@ function handleCloseSolution() {
     <header>
       <h1>🎮 紙片瑪利歐：摺紙國王 戰鬥模擬器</h1>
       <div class="header-info-row">
-        <span v-if="!isEditMode" class="move-info">步數: {{ remainingMoves }} / {{ moveLimit }}</span>
+        <span v-if="!isEditMode" class="move-info">
+          步數: {{ remainingMoves }} / {{ moveLimit }}
+          <template v-if="operationMode === 'rotate' && selectedRing !== null"> | 當前選擇: 圈{{ selectedRing + 1 }}</template>
+          <template v-else-if="operationMode === 'slide' && selectedSector !== null"> | 當前選擇: {{ getSlideLineLabel(selectedSector) }}</template>
+        </span>
       </div>
     </header>
 
