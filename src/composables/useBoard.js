@@ -142,8 +142,8 @@ export function useBoard() {
     return true
   }
 
-  // 滑動徑向（steps > 0 向外，< 0 向內）
-  // 對角線（sector 和 sector+6）一起滑動
+  // 滑動徑向（徑sector和對角徑oppositeSector組成一條8格直線，整條線一起滑動）
+  // 順序：sector圈4→圈1（外到內），oppositeSector圈1→圈4（內到外）
   function slideSector(sector, steps) {
     // 計算對角線徑向
     const oppositeSector = (sector + 6) % NUM_SECTORS
@@ -158,21 +158,26 @@ export function useBoard() {
       return false
     }
 
-    // 滑動第一條徑向
-    const col1 = grid.value.map(row => row[sector])
-    const n = col1.length
-    const normalizedSteps = ((steps % n) + n) % n
-    const newCol1 = [
-      ...col1.slice(n - normalizedSteps),
-      ...col1.slice(0, n - normalizedSteps)
-    ]
+    // 組成8格的線性陣列（穿過圓心的直線）
+    // sector從外到內（圈4→圈1，即索引3→0）
+    // oppositeSector從內到外（圈1→圈4，即索引0→3）
+    const line = []
+    for (let r = NUM_RINGS - 1; r >= 0; r--) {
+      line.push({ ring: r, sector: sector })
+    }
+    for (let r = 0; r < NUM_RINGS; r++) {
+      line.push({ ring: r, sector: oppositeSector })
+    }
     
-    // 滑動對角線徑向（方向相反）
-    const col2 = grid.value.map(row => row[oppositeSector])
-    const oppositeSteps = ((-steps % n) + n) % n
-    const newCol2 = [
-      ...col2.slice(n - oppositeSteps),
-      ...col2.slice(0, n - oppositeSteps)
+    // 提取當前值
+    const values = line.map(cell => grid.value[cell.ring][cell.sector])
+    
+    // 旋轉陣列（8格為一個環）
+    const n = values.length // 8
+    const normalizedSteps = ((steps % n) + n) % n
+    const newValues = [
+      ...values.slice(n - normalizedSteps),
+      ...values.slice(0, n - normalizedSteps)
     ]
 
     // 檢查並更新步數
@@ -182,12 +187,9 @@ export function useBoard() {
     history.value.push({ type: 'slide', sector, oppositeSector, steps: -steps, wasNewMove: false })
     
     // 更新盤面
-    newCol1.forEach((val, r) => {
-      grid.value[r][sector] = val
-    })
-    newCol2.forEach((val, r) => {
-      grid.value[r][oppositeSector] = val
-    })
+    for (let i = 0; i < line.length; i++) {
+      grid.value[line[i].ring][line[i].sector] = newValues[i]
+    }
     return true
   }
 
@@ -208,30 +210,30 @@ export function useBoard() {
       ]
     } else if (lastOp.type === 'slide') {
       const { sector, oppositeSector, steps } = lastOp
-      const n = NUM_RINGS
+      
+      // 組成8格的線性陣列（與滑動時相同順序）
+      const line = []
+      for (let r = NUM_RINGS - 1; r >= 0; r--) {
+        line.push({ ring: r, sector: sector })
+      }
+      for (let r = 0; r < NUM_RINGS; r++) {
+        line.push({ ring: r, sector: oppositeSector })
+      }
+      
+      // 提取當前值
+      const values = line.map(cell => grid.value[cell.ring][cell.sector])
+      
+      // 旋轉陣列（反向）
+      const n = values.length
       const normalizedSteps = ((steps % n) + n) % n
-      
-      // 還原第一條徑向
-      const col1 = grid.value.map(row => row[sector])
-      const newCol1 = [
-        ...col1.slice(n - normalizedSteps),
-        ...col1.slice(0, n - normalizedSteps)
+      const newValues = [
+        ...values.slice(n - normalizedSteps),
+        ...values.slice(0, n - normalizedSteps)
       ]
-      newCol1.forEach((val, r) => {
-        grid.value[r][sector] = val
-      })
       
-      // 還原對角線徑向
-      if (oppositeSector !== undefined) {
-        const col2 = grid.value.map(row => row[oppositeSector])
-        const oppositeSteps = ((-steps % n) + n) % n
-        const newCol2 = [
-          ...col2.slice(n - oppositeSteps),
-          ...col2.slice(0, n - oppositeSteps)
-        ]
-        newCol2.forEach((val, r) => {
-          grid.value[r][oppositeSector] = val
-        })
+      // 更新盤面
+      for (let i = 0; i < line.length; i++) {
+        grid.value[line[i].ring][line[i].sector] = newValues[i]
       }
     }
 

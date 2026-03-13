@@ -104,18 +104,18 @@
       <!-- 滑動控制 -->
       <div v-else class="button-group vertical">
         <button 
-          @click="slideIn" 
+          @click="slideLeft" 
           class="btn btn-action-green" 
           :disabled="selectedSector === null"
         >
-          ⬆️ 向內滑動 1 格
+          ⬅️ 向左滑動 1 格
         </button>
         <button 
-          @click="slideOut" 
+          @click="slideRight" 
           class="btn btn-action-green" 
           :disabled="selectedSector === null"
         >
-          ⬇️ 向外滑動 1 格
+          ➡️ 向右滑動 1 格
         </button>
       </div>
 
@@ -213,11 +213,11 @@ function rotateRight() {
   emit('rotate-ring', { ring: props.selectedRing, steps: 1 })
 }
 
-function slideIn() {
+function slideLeft() {
   emit('slide-sector', { sector: props.selectedSector, steps: -1 })
 }
 
-function slideOut() {
+function slideRight() {
   emit('slide-sector', { sector: props.selectedSector, steps: 1 })
 }
 
