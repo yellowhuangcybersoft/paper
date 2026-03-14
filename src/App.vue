@@ -26,6 +26,12 @@ const {
 // 編輯/操作模式
 const isEditMode = ref(true)
 
+// 追蹤編輯模式下是否有編輯過（用於決定切換到操作模式時是否儲存）
+const hasEditedInEditMode = ref(false)
+
+// 追蹤是否曾經儲存過初始狀態
+const hasEverSavedInitialState = ref(false)
+
 // 編輯類型 (enemy / target)
 const editType = ref('enemy')
 
@@ -50,6 +56,8 @@ function handleCellClick({ ring, sector, editType: type }) {
   } else {
     toggleTarget(ring, sector)
   }
+  // 標記在編輯模式下有編輯過
+  hasEditedInEditMode.value = true
 }
 
 // 處理圈選擇（操作模式）
@@ -92,14 +100,24 @@ function handleReset() {
 function handleClearBoard() {
   if (confirm('確定要清空盤面嗎？')) {
     clearBoard()
+    // 標記在編輯模式下有編輯過
+    hasEditedInEditMode.value = true
   }
 }
 
 // 處理模式變化
 function handleModeChange(editMode) {
-  // 切換到操作模式時自動儲存初始狀態
-  if (!editMode) {
+  // 切換到操作模式時，只有在第一次或編輯模式有編輯過才儲存初始狀態
+  if (!editMode && (!hasEverSavedInitialState.value || hasEditedInEditMode.value)) {
     saveInitialState()
+    hasEverSavedInitialState.value = true
+    hasEditedInEditMode.value = false
+  }
+  // 切換回編輯模式時，恢復到初始狀態
+  if (editMode && hasEverSavedInitialState.value) {
+    reset()
+  }
+  if (!editMode) {
     selectedRing.value = null
     selectedSector.value = null
   }
@@ -122,6 +140,8 @@ function handleOperationModeChange(mode) {
 // 更新操作次數上限
 function updateMoveLimit(val) {
   moveLimit.value = val
+  // 標記在編輯模式下有編輯過
+  hasEditedInEditMode.value = true
 }
 
 // 尋找最佳解法
