@@ -24,23 +24,33 @@
           :class="['segment-btn', editType === 'enemy' ? 'active' : '']"
           @click="setEditType('enemy')"
         >
-          👾 敵人
+          👾 設置敵人
         </button>
         <button 
           :class="['segment-btn', editType === 'target' ? 'active' : '']"
           @click="setEditType('target')"
         >
-          ⭐ 目標
+          ⭐ 設置目標
         </button>
       </div>
       
-      <div class="form-row slider-row">
+      <div class="step-row">
         <label>步數:</label>
-        <input type="range" v-model.number="moveLimit" min="2" max="4" class="slider" />
-        <span class="slider-value">{{ moveLimit }}</span>
-      </div>
-      <div class="button-group">
-        <button @click="clearBoard" class="btn btn-danger">🗑️ 清空</button>
+        <div class="segmented-control compact step-control">
+          <button 
+            :class="['segment-btn', moveLimit === 2 ? 'active' : '']"
+            @click="emit('update:moveLimit', 2)"
+          >
+            2步
+          </button>
+          <button 
+            :class="['segment-btn', moveLimit === 3 ? 'active' : '']"
+            @click="emit('update:moveLimit', 3)"
+          >
+            3步
+          </button>
+        </div>
+        <button @click="clearBoard" class="btn btn-danger btn-clear">🗑️ 清空</button>
       </div>
       <p class="hint desktop-only">👆 點擊盤面上的格子來設置/移除{{ editType === 'enemy' ? '敵人' : '目標' }}</p>
     </div>
@@ -48,27 +58,26 @@
     <!-- 操作模式設定 -->
     <div v-else class="section operation-section">
       <!-- 操作模式切換 -->
-      <div class="segmented-control">
-        <button :class="['segment-btn', operationMode === 'rotate' ? 'active' : '']" @click="setOperationMode('rotate')">
-          🔄 旋轉圈
-        </button>
-        <button :class="['segment-btn', operationMode === 'slide' ? 'active' : '']" @click="setOperationMode('slide')">
-          ↔️ 滑動線
-        </button>
+      <div class="operation-row">
+        <div class="segmented-control compact mode-switch">
+          <button :class="['segment-btn', operationMode === 'rotate' ? 'active' : '']" @click="setOperationMode('rotate')">
+            🔄 旋轉
+          </button>
+          <button :class="['segment-btn', operationMode === 'slide' ? 'active' : '']" @click="setOperationMode('slide')">
+            ↔️ 滑動
+          </button>
+        </div>
+        <div class="direction-btns">
+          <template v-if="operationMode === 'rotate'">
+            <button @click="rotateLeft" class="btn btn-action" :disabled="selectedRing === null">↺ 逆旋</button>
+            <button @click="rotateRight" class="btn btn-action" :disabled="selectedRing === null">↻ 順旋</button>
+          </template>
+          <template v-else>
+            <button @click="slideLeft" class="btn btn-action-green" :disabled="selectedSector === null">⬅ 左滑</button>
+            <button @click="slideRight" class="btn btn-action-green" :disabled="selectedSector === null">➡ 右滑</button>
+          </template>
+        </div>
       </div>
-
-      <div class="button-group">
-        <template v-if="operationMode === 'rotate'">
-          <button @click="rotateLeft" class="btn btn-action" :disabled="selectedRing === null">↺ 逆時針</button>
-          <button @click="rotateRight" class="btn btn-action" :disabled="selectedRing === null">↻ 順時針</button>
-        </template>
-        <template v-else>
-          <button @click="slideLeft" class="btn btn-action-green" :disabled="selectedSector === null">⬅️ 左滑動</button>
-          <button @click="slideRight" class="btn btn-action-green" :disabled="selectedSector === null">➡️ 右滑動</button>
-        </template>
-      </div>
-
-      <hr />
 
       <div class="button-group">
         <button @click="undo" class="btn btn-secondary" :disabled="historyLength === 0">
@@ -101,14 +110,16 @@
 
         <!-- 右側：最佳解法 -->
         <div class="solution-area">
-          <h4>💡 最佳解法</h4>
-          <button 
-            @click="findSolution" 
-            class="btn btn-solution" 
-            :disabled="isSolving"
-          >
-            {{ isSolving ? '🔍 搜尋中...' : '🔍 尋找' }}
-          </button>
+          <div class="solution-title-row">
+            <h4>💡 最佳解法</h4>
+            <button 
+              @click="findSolution" 
+              class="btn btn-solution-sm" 
+              :disabled="isSolving"
+            >
+              {{ isSolving ? '搜尋中...' : '🔍 尋找解法' }}
+            </button>
+          </div>
 
           <!-- 解法顯示區域 -->
           <div v-if="solution" class="solution-result">
@@ -116,7 +127,6 @@
               <span>{{ solution.success ? '✅' : '❌ 無解' }}</span>
               <button class="close-btn" @click="closeSolution">✕</button>
             </div>
-            <p v-if="solution.success" class="solution-message">{{ solution.message }}</p>
             <div v-if="solution.success && solution.operations.length > 0" class="solution-steps">
               <div 
                 v-for="(op, index) in solution.operations" 
@@ -327,6 +337,11 @@ h4 {
   margin-bottom: 10px;
 }
 
+.segmented-control.compact {
+  margin-bottom: 0;
+  flex: 1;
+}
+
 .segment-btn {
   flex: 1;
   padding: 6px 8px;
@@ -348,6 +363,96 @@ h4 {
 
 .segment-btn:not(.active):hover {
   background: rgba(255, 255, 255, 0.4);
+}
+
+/* 步數行：標籤 + 開關 + 清空按鈕 */
+.step-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.step-row label {
+  font-size: 13px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.step-control {
+  flex: 1;
+}
+
+.btn-clear {
+  padding: 6px 10px !important;
+  flex: none;
+  white-space: nowrap;
+}
+
+/* 操作行：開關 + 方向按鈕 */
+.operation-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mode-switch {
+  flex: 1;
+  min-width: 0;
+}
+
+.direction-btns {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.direction-btns .btn {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  padding: 6px 12px !important;
+  font-size: 16px !important;
+  min-width: 40px;
+}
+
+/* 解法標題行 */
+.solution-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.solution-title-row h4 {
+  margin: 0;
+}
+
+.btn-solution-sm {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-solution-sm:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-solution-sm:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .edit-type-toggle,
@@ -455,11 +560,11 @@ h4 {
 
 .btn {
   flex: 1;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   transition: all 0.2s;
 }
@@ -687,16 +792,10 @@ hr {
   margin: 20px 0;
 }
 
-.solution-area .btn-solution {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 6px 8px;
-  font-size: 13px;
-}
-
 .solution-result {
   border-top: 1px solid #eee;
   padding-top: 8px;
+  margin-top: 6px;
 }
 
 .solution-result .solution-header {
@@ -706,12 +805,6 @@ hr {
   margin-bottom: 6px;
   font-size: 13px;
   font-weight: bold;
-}
-
-.solution-result .solution-message {
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 6px;
 }
 
 .solution-result .solution-steps {
@@ -755,23 +848,45 @@ hr {
     margin-bottom: 2px;
   }
   
-  .solution-area .btn-solution {
-    padding: 4px 6px;
-    font-size: 11px;
+  .solution-title-row {
+    gap: 4px;
+  }
+  
+  .btn-solution-sm {
+    padding: 3px 6px;
+    font-size: 10px;
   }
   
   .solution-result .solution-header {
     font-size: 11px;
   }
   
-  .solution-result .solution-message {
-    font-size: 10px;
-    margin-bottom: 4px;
-  }
-  
   .empty-hint {
     font-size: 10px;
     margin: 10px 0;
+  }
+  
+  .operation-row {
+    gap: 6px;
+  }
+  
+  .direction-btns {
+    gap: 3px;
+  }
+  
+  .direction-btns .btn {
+    padding: 5px 6px;
+    font-size: 11px;
+  }
+  
+  .mode-switch .segment-btn {
+    padding: 5px 4px;
+    font-size: 10px;
+  }
+  
+  .btn-solution-sm {
+    padding: 5px 6px;
+    font-size: 11px;
   }
 
   .control-panel {
@@ -799,7 +914,7 @@ hr {
     margin-bottom: 8px;
   }
   
-  .segmented-control {
+  .segmented-control:not(.compact) {
     margin-bottom: 8px;
   }
   
@@ -814,8 +929,8 @@ hr {
   }
   
   .btn {
-    padding: 8px 10px;
-    font-size: 12px;
+    padding: 5px 6px;
+    font-size: 11px;
   }
   
   .status-bar {

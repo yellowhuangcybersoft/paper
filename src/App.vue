@@ -71,13 +71,13 @@ const userOperationHistory = computed(() => {
         if (netSteps === 0) {
           ops[ops.length - 1].label = `圈${h.ring + 1} (已歸位)`
         } else {
-          const direction = netSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+          const direction = netSteps > 0 ? '↻ 順旋' : '↺ 逆旋'
           const absSteps = Math.abs(netSteps)
           ops[ops.length - 1].label = `圈${h.ring + 1} ${direction}` + (absSteps > 1 ? ` x${absSteps}` : '')
         }
       } else {
         // 新組
-        const direction = actualSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+        const direction = actualSteps > 0 ? '↻ 順旋' : '↺ 逆旋'
         ops.push({ type: opType, index: opIndex, label: `圈${h.ring + 1} ${direction}`, netSteps: actualSteps })
         prevOp = { type: opType, index: opIndex }
       }

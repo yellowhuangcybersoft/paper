@@ -454,7 +454,7 @@ export function useBoard() {
           label = `${lineLabel} (已歸位)`
         }
       } else if (group.type === 'rotate') {
-        const direction = group.netSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+        const direction = group.netSteps > 0 ? '↻ 順旋' : '↺ 逆旋'
         label = `圈${group.index + 1} ${direction}` + (absSteps > 1 ? ` x${absSteps}` : '')
       } else {
         const lineLabel = getSlideLineLabel(group.index)
