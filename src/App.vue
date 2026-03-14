@@ -61,30 +61,44 @@ const userOperationHistory = computed(() => {
     
     if (opType === 'rotate') {
       const opIndex = h.ring
-      const direction = actualSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
       
       // 檢查是否與前一個操作同組
       if (prevOp && prevOp.type === opType && prevOp.index === opIndex) {
-        // 同一組，更新最後一個
-        const newCount = ops[ops.length - 1].count + Math.abs(actualSteps)
-        ops[ops.length - 1].count = newCount
-        ops[ops.length - 1].label = `圈${h.ring + 1} ${direction}` + (newCount > 1 ? ` x${newCount}` : '')
+        // 同一組，累加淨移動量（帶符號）
+        const netSteps = ops[ops.length - 1].netSteps + actualSteps
+        ops[ops.length - 1].netSteps = netSteps
+        
+        if (netSteps === 0) {
+          ops[ops.length - 1].label = `圈${h.ring + 1} (已歸位)`
+        } else {
+          const direction = netSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+          const absSteps = Math.abs(netSteps)
+          ops[ops.length - 1].label = `圈${h.ring + 1} ${direction}` + (absSteps > 1 ? ` x${absSteps}` : '')
+        }
       } else {
         // 新組
-        ops.push({ type: opType, index: opIndex, label: `圈${h.ring + 1} ${direction}`, count: Math.abs(actualSteps) })
+        const direction = actualSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+        ops.push({ type: opType, index: opIndex, label: `圈${h.ring + 1} ${direction}`, netSteps: actualSteps })
         prevOp = { type: opType, index: opIndex }
       }
     } else if (opType === 'slide') {
       const opIndex = Math.min(h.sector, h.oppositeSector)
-      const direction = actualSteps > 0 ? '➡️ 右滑' : '⬅️ 左滑'
       const lineLabel = getSlideLineLabel(h.sector)
       
       if (prevOp && prevOp.type === opType && prevOp.index === opIndex) {
-        const newCount = ops[ops.length - 1].count + Math.abs(actualSteps)
-        ops[ops.length - 1].count = newCount
-        ops[ops.length - 1].label = `${lineLabel} ${direction}` + (newCount > 1 ? ` x${newCount}` : '')
+        const netSteps = ops[ops.length - 1].netSteps + actualSteps
+        ops[ops.length - 1].netSteps = netSteps
+        
+        if (netSteps === 0) {
+          ops[ops.length - 1].label = `${lineLabel} (已歸位)`
+        } else {
+          const direction = netSteps > 0 ? '➡️ 右滑' : '⬅️ 左滑'
+          const absSteps = Math.abs(netSteps)
+          ops[ops.length - 1].label = `${lineLabel} ${direction}` + (absSteps > 1 ? ` x${absSteps}` : '')
+        }
       } else {
-        ops.push({ type: opType, index: opIndex, label: `${lineLabel} ${direction}`, count: Math.abs(actualSteps) })
+        const direction = actualSteps > 0 ? '➡️ 右滑' : '⬅️ 左滑'
+        ops.push({ type: opType, index: opIndex, label: `${lineLabel} ${direction}`, netSteps: actualSteps })
         prevOp = { type: opType, index: opIndex }
       }
     }
@@ -298,9 +312,9 @@ header {
 }
 
 header h1 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .header-info-row {
@@ -354,7 +368,7 @@ footer {
   }
   
   header h1 {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
   
   header p {

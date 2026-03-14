@@ -407,7 +407,7 @@ export function useBoard() {
     return count
   }
 
-  // 合併連續同組操作並生成帶 xN 的標籤
+  // 合併連續同組操作並生成帶 xN 的標籤（使用淨移動量）
   function mergeOperations(operations) {
     if (operations.length === 0) return []
     
@@ -420,10 +420,8 @@ export function useBoard() {
         : op.index
       
       if (currentGroup && currentGroup.type === op.type && currentGroup.opIndex === opIndex) {
-        // 同組操作，累加次數
-        currentGroup.count += Math.abs(op.steps)
-        // 更新方向（以最後一次為準）
-        currentGroup.lastSteps = op.steps
+        // 同組操作，累加淨移動量（帶符號）
+        currentGroup.netSteps += op.steps
       } else {
         // 新組操作
         if (currentGroup) {
@@ -433,9 +431,7 @@ export function useBoard() {
           type: op.type,
           index: op.index,
           opIndex,
-          steps: op.steps,
-          lastSteps: op.steps,
-          count: Math.abs(op.steps)
+          netSteps: op.steps
         }
       }
     }
@@ -447,17 +443,23 @@ export function useBoard() {
     // 生成標籤
     return merged.map(group => {
       let label
-      if (group.type === 'rotate') {
-        const direction = group.lastSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
-        label = `圈${group.index + 1} ${direction}`
+      const absSteps = Math.abs(group.netSteps)
+      
+      if (group.netSteps === 0) {
+        // 淨移動量為0（已歸位）
+        if (group.type === 'rotate') {
+          label = `圈${group.index + 1} (已歸位)`
+        } else {
+          const lineLabel = getSlideLineLabel(group.index)
+          label = `${lineLabel} (已歸位)`
+        }
+      } else if (group.type === 'rotate') {
+        const direction = group.netSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+        label = `圈${group.index + 1} ${direction}` + (absSteps > 1 ? ` x${absSteps}` : '')
       } else {
         const lineLabel = getSlideLineLabel(group.index)
-        const direction = group.lastSteps > 0 ? '➡️ 右滑' : '⬅️ 左滑'
-        label = `${lineLabel} ${direction}`
-      }
-      
-      if (group.count > 1) {
-        label += ` x${group.count}`
+        const direction = group.netSteps > 0 ? '➡️ 右滑' : '⬅️ 左滑'
+        label = `${lineLabel} ${direction}` + (absSteps > 1 ? ` x${absSteps}` : '')
       }
       
       return { ...group, label }

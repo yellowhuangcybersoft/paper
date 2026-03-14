@@ -18,21 +18,19 @@
 
     <!-- 編輯模式設定 -->
     <div v-if="isEditMode" class="section edit-section">
-      <h4>編輯設定</h4>
-      
       <!-- 編輯類型切換 -->
-      <div class="edit-type-toggle">
+      <div class="segmented-control">
         <button 
-          :class="['toggle-btn', editType === 'enemy' ? 'active' : '']"
+          :class="['segment-btn', editType === 'enemy' ? 'active' : '']"
           @click="setEditType('enemy')"
         >
-          👾 設置敵人
+          👾 敵人
         </button>
         <button 
-          :class="['toggle-btn', editType === 'target' ? 'active' : '']"
+          :class="['segment-btn', editType === 'target' ? 'active' : '']"
           @click="setEditType('target')"
         >
-          ⭐ 設置目標
+          ⭐ 目標
         </button>
       </div>
       
@@ -49,15 +47,12 @@
 
     <!-- 操作模式設定 -->
     <div v-else class="section operation-section">
-      <h4>操作設定</h4>
-
       <!-- 操作模式切換 -->
-
-      <div class="operation-mode-toggle">
-        <button :class="['toggle-btn', operationMode === 'rotate' ? 'active' : '']" @click="setOperationMode('rotate')">
+      <div class="segmented-control">
+        <button :class="['segment-btn', operationMode === 'rotate' ? 'active' : '']" @click="setOperationMode('rotate')">
           🔄 旋轉圈
         </button>
-        <button :class="['toggle-btn', operationMode === 'slide' ? 'active' : '']" @click="setOperationMode('slide')">
+        <button :class="['segment-btn', operationMode === 'slide' ? 'active' : '']" @click="setOperationMode('slide')">
           ↔️ 滑動線
         </button>
       </div>
@@ -321,6 +316,38 @@ h4 {
 
 .section {
   margin-bottom: 8px;
+}
+
+/* Segmented Control 開關樣式 */
+.segmented-control {
+  display: flex;
+  background: #e9ecef;
+  border-radius: 8px;
+  padding: 2px;
+  margin-bottom: 10px;
+}
+
+.segment-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.segment-btn.active {
+  background: #fff;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.segment-btn:not(.active):hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .edit-type-toggle,
@@ -770,6 +797,15 @@ hr {
   
   .section {
     margin-bottom: 8px;
+  }
+  
+  .segmented-control {
+    margin-bottom: 8px;
+  }
+  
+  .segment-btn {
+    padding: 5px 4px;
+    font-size: 11px;
   }
   
   .toggle-btn {
