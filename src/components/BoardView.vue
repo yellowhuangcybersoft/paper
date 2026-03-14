@@ -291,7 +291,7 @@ function onCellClick(ring, sector) {
 
 .cell {
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, fill 0.3s ease;
 }
 
 .cell:hover {

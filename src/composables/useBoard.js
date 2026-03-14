@@ -606,7 +606,8 @@ export function useBoard() {
           const successMsg = `共 ${moveCount} 步操作，${next.operations.length} 次旋轉/滑動`
           return { 
             success: true, 
-            operations: mergedOps, 
+            operations: mergedOps,
+            rawOperations: next.operations, // 原始未合併的操作列表（用於動畫播放）
             moveCount: moveCount,
             message: successMsg
           }

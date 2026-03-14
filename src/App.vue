@@ -45,6 +45,9 @@ const selectedSector = ref(null)
 // 解法相關
 const solution = ref(null)
 const isSolving = ref(false)
+const isPlayingSolution = ref(false)
+const currentPlayStep = ref(0)
+let playTimer = null
 
 // 歷史記錄長度
 const historyLength = computed(() => history.value.length)
@@ -206,17 +209,95 @@ function updateMoveLimit(val) {
 function handleFindSolution() {
   isSolving.value = true
   solution.value = null
+  stopSolutionPlayback()
   
   // 使用 setTimeout 讓 UI 有機會更新
   setTimeout(() => {
     const result = findBestSolution()
     solution.value = result
     isSolving.value = false
+    
+    // 找到解法後自動播放
+    if (result && result.success && result.operations.length > 0) {
+      playSolution()
+    }
   }, 50)
+}
+
+// 播放解法動畫
+function playSolution() {
+  if (!solution.value || !solution.value.success) return
+  
+  // 先重置到初始狀態
+  reset()
+  selectedRing.value = null
+  selectedSector.value = null
+  
+  isPlayingSolution.value = true
+  currentPlayStep.value = 0
+  
+  // 取得原始操作列表（未合併的）
+  const ops = solution.value.rawOperations || []
+  
+  if (ops.length === 0) {
+    isPlayingSolution.value = false
+    return
+  }
+  
+  // 逐步播放
+  playNextStep(ops)
+}
+
+// 播放下一步
+function playNextStep(ops) {
+  if (currentPlayStep.value >= ops.length) {
+    isPlayingSolution.value = false
+    return
+  }
+  
+  const op = ops[currentPlayStep.value]
+  
+  // 高亮當前操作的圈/排
+  if (op.type === 'rotate') {
+    operationMode.value = 'rotate'
+    selectedRing.value = op.index
+    
+    playTimer = setTimeout(() => {
+      rotateRing(op.index, op.steps)
+      currentPlayStep.value++
+      playTimer = setTimeout(() => playNextStep(ops), 400)
+    }, 300)
+  } else if (op.type === 'slide') {
+    operationMode.value = 'slide'
+    selectedSector.value = op.index
+    
+    playTimer = setTimeout(() => {
+      slideSector(op.index, op.steps)
+      currentPlayStep.value++
+      playTimer = setTimeout(() => playNextStep(ops), 400)
+    }, 300)
+  }
+}
+
+// 停止播放
+function stopSolutionPlayback() {
+  if (playTimer) {
+    clearTimeout(playTimer)
+    playTimer = null
+  }
+  isPlayingSolution.value = false
+  currentPlayStep.value = 0
+}
+
+// 重播解法
+function handleReplaySolution() {
+  stopSolutionPlayback()
+  playSolution()
 }
 
 // 關閉解法視窗
 function handleCloseSolution() {
+  stopSolutionPlayback()
   solution.value = null
 }
 </script>
@@ -260,6 +341,7 @@ function handleCloseSolution() {
         :is-edit-mode="isEditMode"
         :solution="solution"
         :is-solving="isSolving"
+        :is-playing-solution="isPlayingSolution"
         :user-history="userOperationHistory"
         @update:move-limit="updateMoveLimit"
         @rotate-ring="handleRotateRing"
@@ -272,6 +354,7 @@ function handleCloseSolution() {
         @operation-mode-change="handleOperationModeChange"
         @find-solution="handleFindSolution"
         @close-solution="handleCloseSolution"
+        @replay-solution="handleReplaySolution"
       />
     </main>
 

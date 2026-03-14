@@ -112,13 +112,23 @@
         <div class="solution-area">
           <div class="solution-title-row">
             <h4>💡 最佳解法</h4>
-            <button 
-              @click="findSolution" 
-              class="btn btn-solution-sm" 
-              :disabled="isSolving"
-            >
-              {{ isSolving ? '搜尋中...' : '🔍 尋找解法' }}
-            </button>
+            <div class="solution-btns">
+              <button 
+                @click="findSolution" 
+                class="btn btn-solution-sm" 
+                :disabled="isSolving || isPlayingSolution"
+              >
+                {{ isSolving ? '搜尋中...' : (isPlayingSolution ? '播放中...' : '🔍 尋找') }}
+              </button>
+              <button 
+                v-if="solution && solution.success"
+                @click="replaySolution" 
+                class="btn btn-replay-sm"
+                :disabled="isPlayingSolution"
+              >
+                🔄
+              </button>
+            </div>
           </div>
 
           <!-- 解法顯示區域 -->
@@ -185,6 +195,10 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  isPlayingSolution: {
+    type: Boolean,
+    default: false
+  },
   userHistory: {
     type: Array,
     default: () => []
@@ -202,7 +216,8 @@ const emit = defineEmits([
   'edit-type-change',
   'operation-mode-change',
   'find-solution',
-  'close-solution'
+  'close-solution',
+  'replay-solution'
 ])
 
 // 本地狀態
@@ -267,6 +282,10 @@ function findSolution() {
 
 function closeSolution() {
   emit('close-solution')
+}
+
+function replaySolution() {
+  emit('replay-solution')
 }
 </script>
 
@@ -432,6 +451,32 @@ h4 {
 
 .solution-title-row h4 {
   margin: 0;
+}
+
+.solution-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-replay-sm {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: #ff9800;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-replay-sm:hover:not(:disabled) {
+  background: #f57c00;
+}
+
+.btn-replay-sm:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .btn-solution-sm {
@@ -852,7 +897,12 @@ hr {
     gap: 4px;
   }
   
-  .btn-solution-sm {
+  .solution-btns {
+    gap: 3px;
+  }
+  
+  .btn-solution-sm,
+  .btn-replay-sm {
     padding: 3px 6px;
     font-size: 10px;
   }
@@ -882,11 +932,6 @@ hr {
   .mode-switch .segment-btn {
     padding: 5px 4px;
     font-size: 10px;
-  }
-  
-  .btn-solution-sm {
-    padding: 5px 6px;
-    font-size: 11px;
   }
 
   .control-panel {
