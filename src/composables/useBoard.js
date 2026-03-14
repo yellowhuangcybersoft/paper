@@ -407,6 +407,63 @@ export function useBoard() {
     return count
   }
 
+  // 合併連續同組操作並生成帶 xN 的標籤
+  function mergeOperations(operations) {
+    if (operations.length === 0) return []
+    
+    const merged = []
+    let currentGroup = null
+    
+    for (const op of operations) {
+      const opIndex = op.type === 'slide'
+        ? Math.min(op.index, (op.index + 6) % NUM_SECTORS)
+        : op.index
+      
+      if (currentGroup && currentGroup.type === op.type && currentGroup.opIndex === opIndex) {
+        // 同組操作，累加次數
+        currentGroup.count += Math.abs(op.steps)
+        // 更新方向（以最後一次為準）
+        currentGroup.lastSteps = op.steps
+      } else {
+        // 新組操作
+        if (currentGroup) {
+          merged.push(currentGroup)
+        }
+        currentGroup = {
+          type: op.type,
+          index: op.index,
+          opIndex,
+          steps: op.steps,
+          lastSteps: op.steps,
+          count: Math.abs(op.steps)
+        }
+      }
+    }
+    
+    if (currentGroup) {
+      merged.push(currentGroup)
+    }
+    
+    // 生成標籤
+    return merged.map(group => {
+      let label
+      if (group.type === 'rotate') {
+        const direction = group.lastSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+        label = `圈${group.index + 1} ${direction}`
+      } else {
+        const lineLabel = getSlideLineLabel(group.index)
+        const direction = group.lastSteps > 0 ? '➡️ 右滑' : '⬅️ 左滑'
+        label = `${lineLabel} ${direction}`
+      }
+      
+      if (group.count > 1) {
+        label += ` x${group.count}`
+      }
+      
+      return { ...group, label }
+    })
+  }
+
   // 檢查是否所有敵人都達成 2x2（圈1圈2相鄰兩格）或 1x4（同一側4格）陣型
   function checkAligned(g) {
     // 收集所有敵人位置
@@ -542,13 +599,13 @@ export function useBoard() {
         const isWin = useAlignMode ? checkAligned(next.grid) : checkWin(next.grid, tg)
         
         if (isWin) {
-          const successMsg = useAlignMode 
-            ? `找到對齊解法！共 ${calculateMoveCount(next.operations)} 步操作，${next.operations.length} 次旋轉/滑動`
-            : `找到解法！共 ${calculateMoveCount(next.operations)} 步操作，${next.operations.length} 次旋轉/滑動`
+          const mergedOps = mergeOperations(next.operations)
+          const moveCount = calculateMoveCount(next.operations)
+          const successMsg = `共 ${moveCount} 步操作，${next.operations.length} 次旋轉/滑動`
           return { 
             success: true, 
-            operations: next.operations, 
-            moveCount: calculateMoveCount(next.operations),
+            operations: mergedOps, 
+            moveCount: moveCount,
             message: successMsg
           }
         }

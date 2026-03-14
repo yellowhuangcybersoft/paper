@@ -86,31 +86,53 @@
 
       <hr />
 
-      <!-- 最佳解法按鈕 -->
-      <button 
-        @click="findSolution" 
-        class="btn btn-solution" 
-        :disabled="isSolving"
-      >
-        {{ isSolving ? '🔍 搜尋中...' : '💡 尋找最佳解法' }}
-      </button>
-    </div>
+      <!-- 操作紀錄與最佳解法區域 - 左右分欄 -->
+      <div class="history-solution-container">
+        <!-- 左側：使用者操作紀錄 -->
+        <div class="user-history-panel">
+          <h4>📝 你的操作</h4>
+          <div v-if="userHistory.length > 0" class="history-steps">
+            <div 
+              v-for="(op, index) in userHistory" 
+              :key="index" 
+              class="step-item user-step"
+            >
+              <span class="step-number">{{ index + 1 }}.</span>
+              <span class="step-label">{{ op.label }}</span>
+            </div>
+          </div>
+          <p v-else class="empty-hint">尚未操作</p>
+        </div>
 
-    <!-- 解法顯示區域 -->
-    <div v-if="solution" class="solution-panel">
-      <div class="solution-header">
-        <h4>{{ solution.success ? '✅ 找到解法！' : '❌ 無解' }}</h4>
-        <button class="close-btn" @click="closeSolution">✕</button>
-      </div>
-      <p class="solution-message">{{ solution.message }}</p>
-      <div v-if="solution.success && solution.operations.length > 0" class="solution-steps">
-        <div 
-          v-for="(op, index) in solution.operations" 
-          :key="index" 
-          class="step-item"
-        >
-          <span class="step-number">{{ index + 1 }}.</span>
-          <span class="step-label">{{ op.label }}</span>
+        <!-- 右側：最佳解法 -->
+        <div class="solution-area">
+          <h4>💡 最佳解法</h4>
+          <button 
+            @click="findSolution" 
+            class="btn btn-solution" 
+            :disabled="isSolving"
+          >
+            {{ isSolving ? '🔍 搜尋中...' : '🔍 尋找' }}
+          </button>
+
+          <!-- 解法顯示區域 -->
+          <div v-if="solution" class="solution-result">
+            <div class="solution-header">
+              <span>{{ solution.success ? '✅' : '❌ 無解' }}</span>
+              <button class="close-btn" @click="closeSolution">✕</button>
+            </div>
+            <p v-if="solution.success" class="solution-message">{{ solution.message }}</p>
+            <div v-if="solution.success && solution.operations.length > 0" class="solution-steps">
+              <div 
+                v-for="(op, index) in solution.operations" 
+                :key="index" 
+                class="step-item"
+              >
+                <span class="step-number">{{ index + 1 }}.</span>
+                <span class="step-label">{{ op.label }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -157,6 +179,10 @@ const props = defineProps({
   isSolving: {
     type: Boolean,
     default: false
+  },
+  userHistory: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -539,32 +565,10 @@ hr {
   opacity: 0.7;
 }
 
-/* 解法面板 */
-.solution-panel {
-  margin-top: 12px;
-  background: #fff;
-  border: 2px solid #667eea;
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.solution-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.solution-header h4 {
-  margin: 0;
-  font-size: 15px;
-  color: #333;
-}
-
 .close-btn {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 14px;
   cursor: pointer;
   color: #999;
   padding: 0 4px;
@@ -608,8 +612,141 @@ hr {
   color: #333;
 }
 
+/* 操作紀錄與解法左右分欄 */
+.history-solution-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.user-history-panel,
+.solution-area {
+  flex: 1;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  min-height: 120px;
+}
+
+.user-history-panel h4,
+.solution-area h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.history-steps {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.history-steps .step-item {
+  margin-bottom: 4px;
+}
+
+.user-step {
+  background: #e8f5e9 !important;
+}
+
+.user-step .step-number {
+  color: #43A047 !important;
+}
+
+.empty-hint {
+  color: #999;
+  font-size: 12px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.solution-area .btn-solution {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.solution-result {
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+}
+
+.solution-result .solution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.solution-result .solution-message {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.solution-result .solution-steps {
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.solution-result .step-item {
+  padding: 4px 6px;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
 /* 手機板 RWD */
 @media (max-width: 768px) {
+  .history-solution-container {
+    gap: 6px;
+  }
+  
+  .user-history-panel,
+  .solution-area {
+    min-height: 100px;
+    padding: 6px;
+  }
+  
+  .user-history-panel h4,
+  .solution-area h4 {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  
+  .history-steps,
+  .solution-result .solution-steps {
+    max-height: 80px;
+  }
+  
+  .history-steps .step-item,
+  .solution-result .step-item {
+    padding: 2px 4px;
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  
+  .solution-area .btn-solution {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+  
+  .solution-result .solution-header {
+    font-size: 11px;
+  }
+  
+  .solution-result .solution-message {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  
+  .empty-hint {
+    font-size: 10px;
+    margin: 10px 0;
+  }
+
   .control-panel {
     min-width: auto;
     width: 100%;
@@ -677,11 +814,6 @@ hr {
   .btn-solution {
     padding: 10px;
     font-size: 13px;
-  }
-  
-  .solution-panel {
-    padding: 8px;
-    margin-top: 8px;
   }
   
   .solution-steps {

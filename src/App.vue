@@ -49,6 +49,50 @@ const isSolving = ref(false)
 // 歷史記錄長度
 const historyLength = computed(() => history.value.length)
 
+// 計算使用者操作紀錄（可讀格式）
+const userOperationHistory = computed(() => {
+  const ops = []
+  let prevOp = null
+  
+  for (const h of history.value) {
+    const opType = h.type
+    // 計算實際操作方向（history 儲存的是反向操作）
+    const actualSteps = -h.steps
+    
+    if (opType === 'rotate') {
+      const opIndex = h.ring
+      const direction = actualSteps > 0 ? '↻ 順時針' : '↺ 逆時針'
+      
+      // 檢查是否與前一個操作同組
+      if (prevOp && prevOp.type === opType && prevOp.index === opIndex) {
+        // 同一組，更新最後一個
+        const newCount = ops[ops.length - 1].count + Math.abs(actualSteps)
+        ops[ops.length - 1].count = newCount
+        ops[ops.length - 1].label = `圈${h.ring + 1} ${direction}` + (newCount > 1 ? ` x${newCount}` : '')
+      } else {
+        // 新組
+        ops.push({ type: opType, index: opIndex, label: `圈${h.ring + 1} ${direction}`, count: Math.abs(actualSteps) })
+        prevOp = { type: opType, index: opIndex }
+      }
+    } else if (opType === 'slide') {
+      const opIndex = Math.min(h.sector, h.oppositeSector)
+      const direction = actualSteps > 0 ? '➡️ 右滑' : '⬅️ 左滑'
+      const lineLabel = getSlideLineLabel(h.sector)
+      
+      if (prevOp && prevOp.type === opType && prevOp.index === opIndex) {
+        const newCount = ops[ops.length - 1].count + Math.abs(actualSteps)
+        ops[ops.length - 1].count = newCount
+        ops[ops.length - 1].label = `${lineLabel} ${direction}` + (newCount > 1 ? ` x${newCount}` : '')
+      } else {
+        ops.push({ type: opType, index: opIndex, label: `${lineLabel} ${direction}`, count: Math.abs(actualSteps) })
+        prevOp = { type: opType, index: opIndex }
+      }
+    }
+  }
+  
+  return ops
+})
+
 // 處理格子點擊（編輯模式）
 function handleCellClick({ ring, sector, editType: type }) {
   if (type === 'enemy') {
@@ -202,6 +246,7 @@ function handleCloseSolution() {
         :is-edit-mode="isEditMode"
         :solution="solution"
         :is-solving="isSolving"
+        :user-history="userOperationHistory"
         @update:move-limit="updateMoveLimit"
         @rotate-ring="handleRotateRing"
         @slide-sector="handleSlideSector"
